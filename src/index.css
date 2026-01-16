@@ -1,154 +1,161 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* iOS 26 Inspired Design System */
 
 @layer base {
   :root {
-    --background: 209 40% 96%;
-    --foreground: 222 47% 11%;
+    /* Light mode - Soft, airy, glass-like */
+    --background: 220 20% 97%;
+    --foreground: 220 25% 10%;
 
-    --card: 210 40% 98%;
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
 
-    --popover: 214 31% 91%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
 
-    --primary: 200 98% 39%;
-    --primary-foreground: 204 100% 97%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 24% 26%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 220 25% 20%;
 
-    --muted: 215 20% 65%;
-    --muted-foreground: 222 47% 11%;
+    --muted: 220 15% 85%;
+    --muted-foreground: 220 15% 45%;
 
-    --accent: 210 40% 98%;
-    --accent-foreground: 215 19% 34%;
+    --accent: 220 20% 96%;
+    --accent-foreground: 220 25% 15%;
 
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 212 26% 83%;
-    --input: 212 26% 83%;
-    --ring: 200 98% 39%;
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 210 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 1.25rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 222 47% 11%;
-
-    --sidebar-primary: 200 98% 39%;
-
-    --sidebar-primary-foreground: 204 100% 97%;
-
-    --sidebar-accent: 215 24% 26%;
-
-    --sidebar-accent-foreground: 210 40% 98%;
-
-    --sidebar-border: 212 26% 83%;
-
-    --sidebar-ring: 200 98% 39%;
-
-    --chart-1: 198 93% 59%;
-    --chart-2: 213 93% 67%;
-    --chart-3: 215 20% 65%;
-    --chart-4: 215 16% 46%;
-    --chart-5: 215 19% 34%;
-    --sidebar: 210 40% 98%;
-
-    /* Glass effect tokens */
-    --glass: 210 40% 98%;
-    --glass-border: 212 26% 90%;
+    /* Glass effect tokens - iOS 26 style */
+    --glass: 0 0% 100%;
+    --glass-border: 0 0% 100%;
+    --glass-blur: 40px;
     
-    /* Category colors */
-    --study: 271 91% 65%;
-    --work: 199 89% 48%;
-    --habits: 142 76% 46%;
-    --personal: 43 96% 56%;
+    /* Premium glass */
+    --glass-premium: 210 100% 98%;
+    --glass-premium-border: 210 100% 90%;
+    
+    /* Overlay blur */
+    --overlay: 220 25% 10%;
+    
+    /* Category colors - Vibrant but soft */
+    --study: 280 80% 60%;
+    --work: 210 100% 55%;
+    --habits: 150 70% 45%;
+    --personal: 40 95% 55%;
     
     /* City theme */
-    --sky-day: 199 89% 70%;
-    --sky-sunset: 24 95% 68%;
-    --grass: 142 45% 45%;
-    --building: 217 32% 85%;
+    --sky-day: 200 90% 75%;
+    --sky-sunset: 25 95% 65%;
+    --sky-night: 230 50% 20%;
+    --grass: 145 50% 50%;
+    --building: 220 25% 88%;
+    
+    /* Achievement colors */
+    --gold: 45 100% 50%;
+    --silver: 210 10% 70%;
+    --bronze: 25 60% 50%;
+    
+    /* Success color */
+    --success: 150 70% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-    --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 25% 10%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 92%;
+    --sidebar-accent-foreground: 220 25% 20%;
+    --sidebar-border: 220 15% 90%;
+    --sidebar-ring: 210 100% 50%;
 
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-    --shadow-glass: 0 8px 32px 0 hsl(200 98% 39% / 0.1);
+    --chart-1: 210 100% 55%;
+    --chart-2: 280 80% 60%;
+    --chart-3: 150 70% 45%;
+    --chart-4: 40 95% 55%;
+    --chart-5: 0 72% 51%;
+    --sidebar: 0 0% 100%;
 
-    --tracking-normal: 0em;
+    --font-sans: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    
+    --shadow-glass: 0 8px 32px -4px hsl(210 100% 50% / 0.08), 0 4px 16px -2px hsl(0 0% 0% / 0.04);
+    --shadow-glass-hover: 0 12px 40px -4px hsl(210 100% 50% / 0.12), 0 8px 24px -4px hsl(0 0% 0% / 0.06);
+    --shadow-glow: 0 0 40px hsl(210 100% 50% / 0.15);
+    --shadow-premium: 0 20px 60px -12px hsl(210 100% 50% / 0.25);
+    
+    --tracking-normal: -0.01em;
     --spacing: 0.25rem;
-    --radius: 1.25rem;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --background: 230 25% 8%;
+    --foreground: 220 15% 95%;
 
-    --card: 217 32% 17%;
-    --card-foreground: 210 40% 98%;
+    --card: 230 25% 12%;
+    --card-foreground: 220 15% 95%;
 
-    --popover: 215 24% 26%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 230 25% 10%;
+    --popover-foreground: 220 15% 95%;
 
-    --primary: 198 93% 59%;
-    --primary-foreground: 204 80% 15%;
+    --primary: 210 100% 60%;
+    --primary-foreground: 230 25% 8%;
 
-    --secondary: 212 26% 83%;
-    --secondary-foreground: 228 84% 4%;
+    --secondary: 230 20% 18%;
+    --secondary-foreground: 220 15% 90%;
 
-    --muted: 215 16% 46%;
-    --muted-foreground: 210 40% 98%;
+    --muted: 230 15% 25%;
+    --muted-foreground: 220 15% 60%;
 
-    --accent: 228 84% 4%;
-    --accent-foreground: 215 20% 65%;
+    --accent: 230 20% 15%;
+    --accent-foreground: 220 15% 85%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 215 19% 34%;
-    --input: 215 19% 34%;
-    --ring: 198 93% 59%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 198 93% 59%;
-    --sidebar-primary-foreground: 204 80% 15%;
-    --sidebar-accent: 215 20% 65%;
-    --sidebar-accent-foreground: 228 84% 4%;
-    --sidebar-border: 215 19% 34%;
-    --sidebar-ring: 198 93% 59%;
-    --chart-1: 199 95% 73%;
-    --chart-2: 211 96% 78%;
-    --chart-3: 215 20% 65%;
-    --chart-4: 215 16% 46%;
-    --chart-5: 215 19% 34%;
-    --sidebar: 217 32% 17%;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --border: 230 15% 20%;
+    --input: 230 15% 20%;
+    --ring: 210 100% 60%;
+
+    /* Glass effect tokens - Dark mode */
+    --glass: 230 25% 15%;
+    --glass-border: 230 20% 25%;
+    
+    --glass-premium: 230 30% 18%;
+    --glass-premium-border: 210 50% 35%;
+    
+    --overlay: 0 0% 0%;
+    
+    /* City theme dark */
+    --sky-day: 220 50% 25%;
+    --building: 230 20% 22%;
+
+    --sidebar-background: 230 25% 10%;
+    --sidebar-foreground: 220 15% 95%;
+    --sidebar-primary: 210 100% 60%;
+    --sidebar-primary-foreground: 230 25% 8%;
+    --sidebar-accent: 230 20% 18%;
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 230 15% 20%;
+    --sidebar-ring: 210 100% 60%;
+    --sidebar: 230 25% 12%;
+    
+    --shadow-glass: 0 8px 32px -4px hsl(0 0% 0% / 0.3), 0 4px 16px -2px hsl(0 0% 0% / 0.2);
+    --shadow-glass-hover: 0 12px 40px -4px hsl(0 0% 0% / 0.4), 0 8px 24px -4px hsl(0 0% 0% / 0.25);
+    --shadow-glow: 0 0 40px hsl(210 100% 60% / 0.2);
+    --shadow-premium: 0 20px 60px -12px hsl(210 100% 60% / 0.3);
   }
 }
 
@@ -159,24 +166,74 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'ss01' on, 'ss02' on;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* iOS-style selection */
+  ::selection {
+    @apply bg-primary/20;
   }
 }
 
 @layer utilities {
+  /* iOS 26 Glass Morphism */
   .glass {
-    @apply bg-glass/80 backdrop-blur-xl border border-glass-border/50 shadow-glass;
+    @apply bg-glass/70 backdrop-blur-[40px] border border-glass-border/40;
+    box-shadow: var(--shadow-glass);
   }
   
   .glass-strong {
-    @apply bg-glass/95 backdrop-blur-2xl border border-glass-border/60 shadow-glass;
+    @apply bg-glass/85 backdrop-blur-[60px] border border-glass-border/60;
+    box-shadow: var(--shadow-glass);
   }
   
   .glass-subtle {
-    @apply bg-glass/40 backdrop-blur-md border border-glass-border/30;
+    @apply bg-glass/40 backdrop-blur-[24px] border border-glass-border/20;
+  }
+  
+  .glass-premium {
+    @apply bg-glass-premium/80 backdrop-blur-[60px] border border-glass-premium-border/50;
+    box-shadow: var(--shadow-premium);
+  }
+  
+  /* Overlay blur for modals */
+  .overlay-blur {
+    @apply bg-overlay/40 backdrop-blur-[20px];
+  }
+  
+  /* Glassmorphism hover states */
+  .glass-hover {
+    @apply transition-all duration-300;
+  }
+  
+  .glass-hover:hover {
+    box-shadow: var(--shadow-glass-hover);
+  }
+  
+  /* Premium glow effect */
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Text gradients */
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent;
+  }
+  
+  /* Safe area for mobile */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+  
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top, 12px);
   }
 }
 
 @layer components {
+  /* Spring animations */
   .spring-bounce-sm {
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
@@ -187,5 +244,61 @@ All colors MUST be HSL.
   
   .spring-bounce-lg {
     transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  /* iOS-style pressed state */
+  .ios-press {
+    @apply transition-all duration-150 active:scale-[0.97] active:opacity-90;
+  }
+  
+  /* Typography - iOS inspired */
+  .text-display {
+    @apply text-4xl font-extrabold tracking-tight leading-tight;
+    letter-spacing: -0.025em;
+  }
+  
+  .text-headline {
+    @apply text-2xl font-bold tracking-tight;
+    letter-spacing: -0.02em;
+  }
+  
+  .text-title {
+    @apply text-lg font-semibold tracking-tight;
+  }
+  
+  .text-body {
+    @apply text-base font-normal;
+  }
+  
+  .text-caption {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+  
+  .text-micro {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+  
+  /* Premium badge */
+  .badge-premium {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold) / 0.8) 100%);
+    color: hsl(25 50% 15%);
+  }
+  
+  /* Pill buttons */
+  .pill {
+    @apply px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200;
+  }
+  
+  .pill-primary {
+    @apply pill bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98];
+  }
+  
+  .pill-secondary {
+    @apply pill bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  
+  .pill-ghost {
+    @apply pill bg-transparent text-foreground hover:bg-accent;
   }
 }
