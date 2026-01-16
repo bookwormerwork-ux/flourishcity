@@ -1,32 +1,40 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useGameState } from '@/hooks/useGameState';
+import { usePremium } from '@/hooks/usePremium';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useTheme } from '@/hooks/useTheme';
+import { useSchedule } from '@/hooks/useSchedule';
 import { BottomNav } from '@/components/BottomNav';
 import { AddTaskSheet } from '@/components/AddTaskSheet';
+import { SubscriptionSheet } from '@/components/SubscriptionSheet';
+import { DetailedCityView } from '@/components/DetailedCityView';
+import { ReminderNotification } from '@/components/ReminderNotification';
 import { CityTab } from '@/components/views/CityTab';
-import { TasksTab } from '@/components/views/TasksTab';
-import { StatsTab } from '@/components/views/StatsTab';
+import { ScheduleTab } from '@/components/views/ScheduleTab';
+import { AchievementsTab } from '@/components/views/AchievementsTab';
 import { SettingsTab } from '@/components/views/SettingsTab';
 import { TaskCategory, TaskPriority } from '@/types/game';
 
-type TabId = 'city' | 'tasks' | 'add' | 'stats' | 'settings';
+type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'settings';
 type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'rainy';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>('city');
   const [showAddSheet, setShowAddSheet] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
+  const [showDetailedCity, setShowDetailedCity] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
 
-  const {
-    tasks,
-    activeTasks,
-    completedTasks,
-    todaysTasks,
-    cityStats,
-    weather,
-    addTask,
-    completeTask,
-    deleteTask
-  } = useGameState();
+  const { tasks, activeTasks, todaysTasks, cityStats, weather, addTask, completeTask, deleteTask } = useGameState();
+  const { isPremium, plan, subscribe } = usePremium();
+  const { achievements, unlockedCount, totalCount, checkAchievements } = useAchievements(cityStats, tasks);
+  const { theme, setTheme } = useTheme();
+  const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
+
+  // Check achievements when stats change
+  useEffect(() => {
+    checkAchievements();
+  }, [cityStats.totalTasksCompleted, cityStats.streak, checkAchievements]);
 
   const handleAddTask = useCallback((title: string, category: TaskCategory, priority: TaskPriority) => {
     addTask(title, category, priority);
@@ -37,10 +45,6 @@ const Index = () => {
     setCelebrating(true);
     setTimeout(() => setCelebrating(false), 600);
   }, [completeTask]);
-
-  const handleResetData = useCallback(() => {
-    // This will be handled by SettingsTab with a page reload
-  }, []);
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -53,29 +57,39 @@ const Index = () => {
             onCompleteTask={handleCompleteTask}
             onDeleteTask={deleteTask}
             celebrating={celebrating}
+            onZoomClick={() => setShowDetailedCity(true)}
           />
         );
-      case 'tasks':
+      case 'schedule':
         return (
-          <TasksTab
-            activeTasks={activeTasks}
-            completedTasks={completedTasks}
+          <ScheduleTab
+            tasks={activeTasks}
+            scheduleByHour={scheduleByHour}
+            onScheduleTask={scheduleTask}
             onCompleteTask={handleCompleteTask}
-            onDeleteTask={deleteTask}
+            isPremium={isPremium}
+            onUpgradeClick={() => setShowSubscription(true)}
           />
         );
-      case 'stats':
+      case 'achievements':
         return (
-          <StatsTab
-            cityStats={cityStats}
-            tasks={tasks}
+          <AchievementsTab
+            achievements={achievements}
+            unlockedCount={unlockedCount}
+            totalCount={totalCount}
+            isPremium={isPremium}
           />
         );
       case 'settings':
         return (
           <SettingsTab
             cityStats={cityStats}
-            onResetData={handleResetData}
+            onResetData={() => {}}
+            theme={theme}
+            onThemeChange={setTheme}
+            isPremium={isPremium}
+            plan={plan}
+            onUpgradeClick={() => setShowSubscription(true)}
           />
         );
       default:
@@ -84,16 +98,16 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-accent/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20 flex items-center justify-center p-4">
       {/* iPhone frame */}
-      <div className="w-full max-w-[390px] h-[844px] bg-background rounded-[3rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/50">
+      <div className="w-full max-w-[390px] h-[844px] bg-background rounded-[3rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/30">
         {/* Status bar mockup */}
-        <div className="h-12 flex items-center justify-center">
-          <div className="w-32 h-6 bg-foreground/10 rounded-full" />
+        <div className="h-12 flex items-center justify-center safe-area-pt">
+          <div className="w-28 h-7 bg-foreground/10 rounded-full" />
         </div>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto px-5 pb-4">
+        <main className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-hide">
           {renderActiveTab()}
         </main>
 
@@ -105,12 +119,20 @@ const Index = () => {
         />
       </div>
 
-      {/* Add task sheet */}
-      <AddTaskSheet
-        isOpen={showAddSheet}
-        onClose={() => setShowAddSheet(false)}
-        onAdd={handleAddTask}
-      />
+      {/* Reminder notifications */}
+      {activeReminders.map(reminder => (
+        <ReminderNotification
+          key={reminder.id}
+          reminder={reminder}
+          onDismiss={dismissReminder}
+          onComplete={handleCompleteTask}
+        />
+      ))}
+
+      {/* Sheets */}
+      <AddTaskSheet isOpen={showAddSheet} onClose={() => setShowAddSheet(false)} onAdd={handleAddTask} />
+      <SubscriptionSheet isOpen={showSubscription} onClose={() => setShowSubscription(false)} onSubscribe={subscribe} currentPlan={plan} />
+      <DetailedCityView isOpen={showDetailedCity} onClose={() => setShowDetailedCity(false)} stats={cityStats} weather={weather as WeatherType} activeTasks={activeTasks} isPremium={isPremium} onUpgradeClick={() => { setShowDetailedCity(false); setShowSubscription(true); }} />
     </div>
   );
 };

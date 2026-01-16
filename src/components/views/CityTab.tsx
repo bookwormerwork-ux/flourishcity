@@ -13,6 +13,7 @@ interface CityTabProps {
   onCompleteTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   celebrating: boolean;
+  onZoomClick?: () => void;
 }
 
 export function CityTab({ 
@@ -21,7 +22,8 @@ export function CityTab({
   todaysTasks, 
   onCompleteTask, 
   onDeleteTask,
-  celebrating 
+  celebrating,
+  onZoomClick
 }: CityTabProps) {
   const activeTodayTasks = todaysTasks.filter(t => !t.completed);
 
@@ -38,7 +40,7 @@ export function CityTab({
       </div>
 
       {/* City View */}
-      <CityView stats={cityStats} weather={weather} onCelebrate={celebrating} />
+      <CityView stats={cityStats} weather={weather} onCelebrate={celebrating} onZoomClick={onZoomClick} />
 
       {/* Happiness Meter */}
       <HappinessMeter value={cityStats.happiness} />

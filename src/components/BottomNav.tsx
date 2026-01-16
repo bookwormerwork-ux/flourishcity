@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
-import { Home, CheckSquare, Calendar, BarChart3, Settings, Plus } from 'lucide-react';
+import { Home, CheckSquare, Calendar, Trophy, Settings, Plus } from 'lucide-react';
 
-type TabId = 'city' | 'tasks' | 'add' | 'stats' | 'settings';
+type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'settings';
 
 interface BottomNavProps {
   activeTab: TabId;
@@ -12,14 +12,14 @@ interface BottomNavProps {
 export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps) {
   const tabs = [
     { id: 'city' as TabId, icon: Home, label: 'City' },
-    { id: 'tasks' as TabId, icon: CheckSquare, label: 'Tasks' },
+    { id: 'schedule' as TabId, icon: Calendar, label: 'Schedule' },
     { id: 'add' as TabId, icon: Plus, label: 'Add', isAction: true },
-    { id: 'stats' as TabId, icon: BarChart3, label: 'Stats' },
+    { id: 'achievements' as TabId, icon: Trophy, label: 'Awards' },
     { id: 'settings' as TabId, icon: Settings, label: 'Settings' },
   ];
 
   return (
-    <nav className="glass-strong rounded-t-3xl px-2 py-2 safe-area-pb">
+    <nav className="glass-strong rounded-t-[2rem] px-2 py-3 safe-area-pb">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -29,7 +29,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
               <button
                 key={tab.id}
                 onClick={onAddClick}
-                className="relative -mt-6 p-4 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 active:scale-95 transition-all spring-bounce-sm"
+                className="relative -mt-8 p-4 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-button hover:shadow-lg active:scale-95 transition-all spring-bounce-sm"
               >
                 <Icon className="w-6 h-6" />
               </button>
@@ -41,7 +41,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-xl transition-all spring-bounce-sm min-w-[64px]",
+                "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all spring-bounce-sm min-w-[56px]",
                 activeTab === tab.id
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -53,7 +53,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
               )}>
                 <Icon className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium">{tab.label}</span>
+              <span className="text-[10px] font-semibold">{tab.label}</span>
             </button>
           );
         })}
