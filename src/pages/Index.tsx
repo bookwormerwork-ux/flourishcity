@@ -26,7 +26,7 @@ const Index = () => {
   const [celebrating, setCelebrating] = useState(false);
 
   const { tasks, activeTasks, todaysTasks, cityStats, weather, addTask, completeTask, deleteTask } = useGameState();
-  const { isPremium, plan, subscribe } = usePremium();
+  const { isPremium, plan, isDeveloper, subscribe, activateDeveloperMode, deactivateDeveloperMode } = usePremium();
   const { achievements, unlockedCount, totalCount, checkAchievements } = useAchievements(cityStats, tasks);
   const { theme, setTheme } = useTheme();
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
@@ -43,7 +43,7 @@ const Index = () => {
   const handleCompleteTask = useCallback((id: string) => {
     completeTask(id);
     setCelebrating(true);
-    setTimeout(() => setCelebrating(false), 600);
+    setTimeout(() => setCelebrating(false), 700);
   }, [completeTask]);
 
   const renderActiveTab = () => {
@@ -88,8 +88,11 @@ const Index = () => {
             theme={theme}
             onThemeChange={setTheme}
             isPremium={isPremium}
+            isDeveloper={isDeveloper}
             plan={plan}
             onUpgradeClick={() => setShowSubscription(true)}
+            onActivateDeveloper={activateDeveloperMode}
+            onDeactivateDeveloper={deactivateDeveloperMode}
           />
         );
       default:

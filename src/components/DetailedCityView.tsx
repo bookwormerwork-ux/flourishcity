@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CityStats, Task, CATEGORY_ICONS } from '@/types/game';
 import { cn } from '@/lib/utils';
-import { X, Maximize2, Lock } from 'lucide-react';
+import { X, Lock, User, Smile, Frown, Meh, Heart, Star, Sparkles } from 'lucide-react';
 
 interface DetailedCityViewProps {
   isOpen: boolean;
@@ -17,14 +17,30 @@ interface Citizen {
   id: number;
   x: number;
   y: number;
-  emoji: string;
-  animation: 'walk-1' | 'walk-2' | 'walk-3';
+  mood: 'happy' | 'neutral' | 'sad';
+  animation: 'walk-1' | 'walk-2' | 'walk-3' | 'walk-4';
   scale: number;
+  delay: number;
 }
 
-const HAPPY_EMOJIS = ['😊', '😄', '🥰', '😎', '🤩', '😋', '🙂', '😌'];
-const NEUTRAL_EMOJIS = ['😐', '🙂', '😶', '🤔', '😑'];
-const SAD_EMOJIS = ['😢', '😔', '😟', '🥺', '😞'];
+interface FloatingEmoji {
+  id: number;
+  x: number;
+  emoji: 'happy' | 'neutral' | 'sad';
+  startTime: number;
+}
+
+const MOOD_ICONS = {
+  happy: Smile,
+  neutral: Meh,
+  sad: Frown
+};
+
+const MOOD_COLORS = {
+  happy: 'text-success',
+  neutral: 'text-muted-foreground',
+  sad: 'text-primary'
+};
 
 export function DetailedCityView({ 
   isOpen, 
@@ -36,33 +52,78 @@ export function DetailedCityView({
   onUpgradeClick
 }: DetailedCityViewProps) {
   const [citizens, setCitizens] = useState<Citizen[]>([]);
+  const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
+  const floatingInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Generate citizens based on population and happiness
   useEffect(() => {
     if (!isOpen) return;
 
-    const getEmoji = () => {
-      if (stats.happiness >= 70) {
-        return HAPPY_EMOJIS[Math.floor(Math.random() * HAPPY_EMOJIS.length)];
-      } else if (stats.happiness >= 40) {
-        return NEUTRAL_EMOJIS[Math.floor(Math.random() * NEUTRAL_EMOJIS.length)];
-      }
-      return SAD_EMOJIS[Math.floor(Math.random() * SAD_EMOJIS.length)];
+    const getMood = (): 'happy' | 'neutral' | 'sad' => {
+      const rand = Math.random() * 100;
+      if (rand < stats.happiness) return 'happy';
+      if (rand < stats.happiness + 20) return 'neutral';
+      return 'sad';
     };
 
-    const animations: ('walk-1' | 'walk-2' | 'walk-3')[] = ['walk-1', 'walk-2', 'walk-3'];
+    const animations: ('walk-1' | 'walk-2' | 'walk-3' | 'walk-4')[] = ['walk-1', 'walk-2', 'walk-3', 'walk-4'];
     
-    const newCitizens: Citizen[] = Array.from({ length: Math.min(stats.population, 20) }, (_, i) => ({
+    const newCitizens: Citizen[] = Array.from({ length: Math.min(stats.population, 15) }, (_, i) => ({
       id: i,
-      x: 10 + Math.random() * 80,
-      y: 50 + Math.random() * 35,
-      emoji: getEmoji(),
+      x: 8 + Math.random() * 84,
+      y: 55 + Math.random() * 30,
+      mood: getMood(),
       animation: animations[Math.floor(Math.random() * animations.length)],
-      scale: 0.8 + Math.random() * 0.4
+      scale: 0.7 + Math.random() * 0.5,
+      delay: Math.random() * 2
     }));
 
     setCitizens(newCitizens);
   }, [isOpen, stats.population, stats.happiness]);
+
+  // Floating emojis effect
+  useEffect(() => {
+    if (!isOpen || !isPremium) return;
+
+    const spawnFloatingEmoji = () => {
+      const getMood = (): 'happy' | 'neutral' | 'sad' => {
+        const rand = Math.random() * 100;
+        if (rand < stats.happiness) return 'happy';
+        if (rand < stats.happiness + 20) return 'neutral';
+        return 'sad';
+      };
+
+      const newEmoji: FloatingEmoji = {
+        id: Date.now(),
+        x: 10 + Math.random() * 80,
+        emoji: getMood(),
+        startTime: Date.now()
+      };
+
+      setFloatingEmojis(prev => [...prev.slice(-8), newEmoji]);
+    };
+
+    // Spawn initial emoji
+    spawnFloatingEmoji();
+    
+    floatingInterval.current = setInterval(spawnFloatingEmoji, 2500);
+
+    return () => {
+      if (floatingInterval.current) {
+        clearInterval(floatingInterval.current);
+      }
+    };
+  }, [isOpen, isPremium, stats.happiness]);
+
+  // Cleanup old floating emojis
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      setFloatingEmojis(prev => prev.filter(e => now - e.startTime < 3000));
+    }, 1000);
+
+    return () => clearInterval(cleanup);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -71,12 +132,12 @@ export function DetailedCityView({
     return (
       <>
         <div 
-          className="fixed inset-0 overlay-blur z-40 animate-fade-in"
+          className="fixed inset-0 overlay-blur-strong z-40 animate-fade-in"
           onClick={onClose}
         />
         <div className="fixed inset-4 z-50 flex items-center justify-center">
-          <div className="glass-strong rounded-3xl p-8 max-w-sm text-center animate-scale-in">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4">
+          <div className="glass-ultra rounded-[2rem] p-8 max-w-sm text-center animate-scale-in">
+            <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 animate-breathe">
               <Lock className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-headline text-foreground mb-2">Unlock City View</h2>
@@ -85,13 +146,13 @@ export function DetailedCityView({
             </p>
             <button 
               onClick={onUpgradeClick}
-              className="pill-primary w-full mb-3"
+              className="pill-primary w-full mb-3 transition-all duration-300 hover:scale-[1.02]"
             >
               Upgrade to Pro
             </button>
             <button 
               onClick={onClose}
-              className="pill-ghost w-full"
+              className="pill-ghost w-full transition-all duration-300"
             >
               Maybe Later
             </button>
@@ -101,10 +162,15 @@ export function DetailedCityView({
     );
   }
 
+  const MoodIcon = ({ mood, className }: { mood: 'happy' | 'neutral' | 'sad'; className?: string }) => {
+    const Icon = MOOD_ICONS[mood];
+    return <Icon className={cn('w-6 h-6', MOOD_COLORS[mood], className)} />;
+  };
+
   return (
     <>
       {/* Fullscreen backdrop */}
-      <div className="fixed inset-0 z-40 animate-fade-in">
+      <div className="fixed inset-0 z-40 animate-fade-in overflow-hidden">
         {/* Sky */}
         <div className={cn(
           "absolute inset-0 transition-all duration-1000",
@@ -122,23 +188,29 @@ export function DetailedCityView({
         {/* Floating clouds */}
         {(weather === 'partly-cloudy' || weather === 'cloudy' || weather === 'rainy') && (
           <>
-            <div className="absolute top-16 left-[10%] text-6xl animate-float opacity-60">☁️</div>
-            <div className="absolute top-24 left-[40%] text-5xl animate-float-slow opacity-40" style={{ animationDelay: '1s' }}>☁️</div>
-            <div className="absolute top-12 right-[20%] text-7xl animate-float opacity-50" style={{ animationDelay: '2s' }}>☁️</div>
+            <div className="absolute top-16 left-[10%] animate-float opacity-60">
+              <div className="w-16 h-10 bg-glass/40 rounded-full blur-sm" />
+            </div>
+            <div className="absolute top-24 left-[40%] animate-float-slow opacity-40" style={{ animationDelay: '1s' }}>
+              <div className="w-20 h-12 bg-glass/50 rounded-full blur-sm" />
+            </div>
+            <div className="absolute top-12 right-[20%] animate-float opacity-50" style={{ animationDelay: '2s' }}>
+              <div className="w-24 h-14 bg-glass/45 rounded-full blur-sm" />
+            </div>
           </>
         )}
 
         {/* Rain */}
         {weather === 'rainy' && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {Array.from({ length: 50 }).map((_, i) => (
+            {Array.from({ length: 40 }).map((_, i) => (
               <div
                 key={i}
-                className="absolute w-0.5 h-6 bg-primary/30 rounded-full"
+                className="absolute w-0.5 h-8 bg-primary/20 rounded-full"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 60}%`,
-                  animation: `bounce-gentle ${1 + Math.random()}s ease-in-out infinite`,
+                  animation: `bounce-gentle ${1.5 + Math.random()}s ease-in-out infinite`,
                   animationDelay: `${Math.random() * 2}s`
                 }}
               />
@@ -150,53 +222,69 @@ export function DetailedCityView({
         <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-city-grass to-city-grass/60" />
 
         {/* Buildings in background */}
-        <div className="absolute bottom-[40%] left-0 right-0 flex justify-center items-end gap-4 px-8">
-          {stats.buildings.slice(0, 10).map((building, i) => (
+        <div className="absolute bottom-[40%] left-0 right-0 flex justify-center items-end gap-3 px-4">
+          {stats.buildings.slice(0, 8).map((building, i) => (
             <div 
               key={building.id}
               className="flex flex-col items-center animate-fade-in"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
               <div className={cn(
-                "glass rounded-xl p-4 transition-all hover:scale-105",
-                building.type === 'tower' && "p-6",
+                "glass rounded-2xl p-3 transition-all duration-500 hover:scale-105",
+                building.type === 'tower' && "p-4",
                 building.type === 'park' && "bg-city-grass/30"
               )}>
-                <span className={cn(
-                  "text-4xl",
-                  building.type === 'tower' && "text-5xl"
+                <div className={cn(
+                  "flex items-center justify-center",
+                  building.type === 'tower' ? "w-10 h-10" : "w-8 h-8"
                 )}>
-                  {building.type === 'house' && '🏠'}
-                  {building.type === 'school' && '🏫'}
-                  {building.type === 'office' && '🏢'}
-                  {building.type === 'gym' && '🏋️'}
-                  {building.type === 'park' && '🌳'}
-                  {building.type === 'tower' && '🏙️'}
-                </span>
+                  {building.type === 'house' && <User className="w-full h-full text-foreground/70" />}
+                  {building.type === 'school' && <Star className="w-full h-full text-category-study" />}
+                  {building.type === 'office' && <Sparkles className="w-full h-full text-category-work" />}
+                  {building.type === 'gym' && <Heart className="w-full h-full text-category-habits" />}
+                  {building.type === 'park' && <Smile className="w-full h-full text-success" />}
+                  {building.type === 'tower' && <Star className="w-full h-full text-achievement-gold" />}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
+        {/* Floating mood emojis (from city to sky) */}
+        {floatingEmojis.map(emoji => (
+          <div
+            key={emoji.id}
+            className="absolute animate-float-up-fade pointer-events-none"
+            style={{
+              left: `${emoji.x}%`,
+              bottom: '30%'
+            }}
+          >
+            <div className="glass-subtle rounded-full p-2">
+              <MoodIcon mood={emoji.emoji} className="w-5 h-5" />
+            </div>
+          </div>
+        ))}
+
         {/* Walking citizens */}
-        <div className="absolute bottom-[15%] left-0 right-0 h-[25%]">
+        <div className="absolute bottom-[12%] left-0 right-0 h-[28%]">
           {citizens.map(citizen => (
             <div
               key={citizen.id}
               className={cn(
-                "absolute transition-all duration-300",
+                "absolute transition-all duration-700",
                 `animate-${citizen.animation}`
               )}
               style={{
                 left: `${citizen.x}%`,
                 top: `${citizen.y}%`,
                 transform: `scale(${citizen.scale})`,
-                animationDelay: `${Math.random() * 2}s`
+                animationDelay: `${citizen.delay}s`
               }}
             >
-              <span className="text-3xl filter drop-shadow-lg cursor-pointer hover:scale-125 transition-transform">
-                {citizen.emoji}
-              </span>
+              <div className="glass-subtle rounded-full p-2 shadow-lg cursor-pointer hover:scale-110 transition-all duration-300">
+                <MoodIcon mood={citizen.mood} className="w-6 h-6" />
+              </div>
             </div>
           ))}
         </div>
@@ -205,16 +293,16 @@ export function DetailedCityView({
         {activeTasks.slice(0, 3).map((task, i) => (
           <div
             key={task.id}
-            className="absolute glass-subtle rounded-2xl px-4 py-2 animate-float"
+            className="absolute glass rounded-2xl px-4 py-2 animate-float shadow-lg"
             style={{
-              bottom: `${25 + i * 8}%`,
-              left: `${15 + i * 25}%`,
+              bottom: `${28 + i * 7}%`,
+              left: `${12 + i * 28}%`,
               animationDelay: `${i * 0.5}s`
             }}
           >
             <div className="flex items-center gap-2">
               <span className="text-xl">{CATEGORY_ICONS[task.category]}</span>
-              <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
+              <span className="text-sm font-medium text-foreground max-w-[100px] truncate">
                 {task.title}
               </span>
             </div>
@@ -224,14 +312,14 @@ export function DetailedCityView({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 glass-strong p-3 rounded-2xl ios-press"
+          className="absolute top-6 right-6 glass-strong p-3 rounded-2xl ios-press transition-all duration-300 hover:scale-105"
         >
           <X className="w-6 h-6 text-foreground" />
         </button>
 
         {/* Stats overlay */}
         <div className="absolute bottom-6 left-6 right-6">
-          <div className="glass-strong rounded-3xl p-4">
+          <div className="glass-ultra rounded-[2rem] p-5">
             <div className="flex items-center justify-between">
               <div className="text-center">
                 <p className="text-2xl font-bold text-foreground">{stats.population}</p>
