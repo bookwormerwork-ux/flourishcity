@@ -8,7 +8,9 @@ import {
   Bell, 
   Calendar,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Target,
+  X
 } from 'lucide-react';
 
 interface ScheduleTabProps {
@@ -29,6 +31,7 @@ export function ScheduleTab({
   onUpgradeClick
 }: ScheduleTabProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [focusTask, setFocusTask] = useState<Task | null>(null);
   
   const unscheduledTasks = useMemo(() => 
     tasks.filter(t => !t.completed && !Object.values(scheduleByHour).flat().find(s => s?.id === t.id))
@@ -59,6 +62,55 @@ export function ScheduleTab({
   // Show working hours (6 AM - 11 PM)
   const visibleHours = Array.from({ length: 18 }, (_, i) => i + 6);
 
+  // Focus mode overlay
+  if (focusTask) {
+    return (
+      <>
+        <div className="fixed inset-0 overlay-blur-strong z-40 animate-fade-in" onClick={() => setFocusTask(null)} />
+        <div className="fixed inset-6 z-50 flex flex-col items-center justify-center animate-scale-in">
+          <div className="glass-ultra rounded-[2rem] p-8 max-w-sm w-full text-center relative">
+            <button 
+              onClick={() => setFocusTask(null)}
+              className="absolute top-4 right-4 p-2 rounded-xl hover:bg-accent/50 transition-all duration-300"
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+            
+            <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-6 animate-breathe">
+              <Target className="w-10 h-10 text-primary" />
+            </div>
+            
+            <p className="text-caption mb-2">Focus Mode</p>
+            <h2 className="text-headline text-foreground mb-4">{focusTask.title}</h2>
+            
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <span className="text-2xl">{CATEGORY_ICONS[focusTask.category]}</span>
+              <span className="text-body text-muted-foreground capitalize">{focusTask.category}</span>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => {
+                  onCompleteTask(focusTask.id);
+                  setFocusTask(null);
+                }}
+                className="w-full pill-primary py-4 text-base transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Mark Complete
+              </button>
+              <button 
+                onClick={() => setFocusTask(null)}
+                className="w-full pill-ghost py-3 transition-all duration-300"
+              >
+                Back to Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
@@ -75,11 +127,11 @@ export function ScheduleTab({
       </div>
 
       {/* Date selector */}
-      <GlassPanel className="p-3">
+      <GlassPanel className="p-3" variant="strong">
         <div className="flex items-center justify-between">
           <button 
             onClick={handlePrevDay}
-            className="p-2 rounded-xl hover:bg-accent/50 transition-colors ios-press"
+            className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
           >
             <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -95,7 +147,7 @@ export function ScheduleTab({
           
           <button 
             onClick={handleNextDay}
-            className="p-2 rounded-xl hover:bg-accent/50 transition-colors ios-press"
+            className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
           >
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -104,7 +156,7 @@ export function ScheduleTab({
 
       {/* Premium lock for schedule editing */}
       {!isPremium && (
-        <GlassPanel className="glass-premium p-4 text-center">
+        <GlassPanel className="glass-premium p-4 text-center" variant="strong">
           <Bell className="w-8 h-8 text-primary mx-auto mb-2" />
           <p className="text-title text-foreground mb-1">Unlock Full Scheduling</p>
           <p className="text-caption mb-3">
@@ -112,7 +164,7 @@ export function ScheduleTab({
           </p>
           <button 
             onClick={onUpgradeClick}
-            className="pill-primary text-sm"
+            className="pill-primary text-sm transition-all duration-300 hover:scale-[1.02]"
           >
             Upgrade to Pro
           </button>
@@ -130,17 +182,17 @@ export function ScheduleTab({
             <div 
               key={hour}
               className={cn(
-                "flex gap-3 min-h-[60px] transition-all duration-300",
-                isPast && "opacity-50"
+                "flex gap-3 min-h-[60px] transition-all duration-500",
+                isPast && "opacity-40"
               )}
             >
               {/* Time column */}
               <div className={cn(
-                "w-16 shrink-0 text-right pr-3 py-2 border-r-2 transition-colors",
+                "w-16 shrink-0 text-right pr-3 py-2 border-r-2 transition-all duration-500",
                 isNow ? "border-primary" : "border-border/30"
               )}>
                 <span className={cn(
-                  "text-micro",
+                  "text-micro transition-all duration-300",
                   isNow && "text-primary font-semibold"
                 )}>
                   {formatHour(hour)}
@@ -158,9 +210,9 @@ export function ScheduleTab({
                   tasksAtHour.map(task => task && (
                     <button
                       key={task.id}
-                      onClick={() => onCompleteTask(task.id)}
+                      onClick={() => setFocusTask(task)}
                       className={cn(
-                        "w-full glass-subtle rounded-xl p-3 text-left transition-all ios-press",
+                        "w-full glass-subtle rounded-xl p-3 text-left transition-all duration-300 ios-press hover:scale-[1.02]",
                         task.completed && "opacity-50 line-through"
                       )}
                     >
@@ -169,6 +221,7 @@ export function ScheduleTab({
                         <span className="text-body text-foreground font-medium truncate">
                           {task.title}
                         </span>
+                        <Target className="w-4 h-4 text-primary/50 ml-auto" />
                       </div>
                     </button>
                   ))
@@ -185,7 +238,7 @@ export function ScheduleTab({
 
       {/* Quick add unscheduled tasks */}
       {unscheduledTasks.length > 0 && (
-        <GlassPanel>
+        <GlassPanel variant="strong">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-5 h-5 text-primary" />
             <h2 className="text-title text-foreground">Unscheduled Tasks</h2>
@@ -194,14 +247,16 @@ export function ScheduleTab({
             {unscheduledTasks.slice(0, 5).map(task => (
               <div 
                 key={task.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-all duration-300 cursor-pointer"
+                onClick={() => setFocusTask(task)}
               >
                 <div className="flex items-center gap-2">
                   <span>{CATEGORY_ICONS[task.category]}</span>
                   <span className="text-body text-foreground">{task.title}</span>
                 </div>
                 <button 
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (isPremium) {
                       const now = new Date();
                       now.setHours(now.getHours() + 1, 0, 0, 0);
@@ -210,7 +265,7 @@ export function ScheduleTab({
                       onUpgradeClick();
                     }
                   }}
-                  className="p-2 rounded-lg hover:bg-accent transition-colors"
+                  className="p-2 rounded-lg hover:bg-accent transition-all duration-300"
                 >
                   <Plus className="w-4 h-4 text-primary" />
                 </button>
