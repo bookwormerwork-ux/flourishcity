@@ -10,8 +10,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Target,
-  X
+  X,
+  Check,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
+
+type ZoomLevel = 'day' | 'month' | 'year';
 
 interface ScheduleTabProps {
   tasks: Task[];
@@ -21,6 +26,9 @@ interface ScheduleTabProps {
   isPremium: boolean;
   onUpgradeClick: () => void;
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function ScheduleTab({ 
   tasks, 
@@ -32,10 +40,40 @@ export function ScheduleTab({
 }: ScheduleTabProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [focusTask, setFocusTask] = useState<Task | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('day');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   
   const unscheduledTasks = useMemo(() => 
     tasks.filter(t => !t.completed && !Object.values(scheduleByHour).flat().find(s => s?.id === t.id))
   , [tasks, scheduleByHour]);
+
+  // Get task count for a specific date
+  const getTaskCountForDate = (date: Date) => {
+    return tasks.filter(t => {
+      if (!t.dueDate) return false;
+      const taskDate = new Date(t.dueDate);
+      return taskDate.toDateString() === date.toDateString();
+    }).length;
+  };
+
+  // Get task count for a month
+  const getTaskCountForMonth = (month: number, year: number) => {
+    return tasks.filter(t => {
+      if (!t.dueDate) return false;
+      const taskDate = new Date(t.dueDate);
+      return taskDate.getMonth() === month && taskDate.getFullYear() === year;
+    }).length;
+  };
+
+  // Get completed count for a month
+  const getCompletedForMonth = (month: number, year: number) => {
+    return tasks.filter(t => {
+      if (!t.completedAt) return false;
+      const taskDate = new Date(t.completedAt);
+      return taskDate.getMonth() === month && taskDate.getFullYear() === year && t.completed;
+    }).length;
+  };
 
   const formatHour = (hour: number) => {
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -58,6 +96,46 @@ export function ScheduleTab({
   };
 
   const isToday = selectedDate.toDateString() === new Date().toDateString();
+
+  // Cycle zoom: day -> month -> year -> day
+  const handleZoomCycle = () => {
+    if (zoomLevel === 'day') {
+      setZoomLevel('month');
+    } else if (zoomLevel === 'month') {
+      setZoomLevel('year');
+    } else {
+      setZoomLevel('day');
+    }
+  };
+
+  // Handle date selection from month view
+  const handleDaySelect = (day: number) => {
+    const newDate = new Date(selectedYear, selectedMonth, day);
+    setSelectedDate(newDate);
+    setZoomLevel('day');
+  };
+
+  // Handle month selection from year view
+  const handleMonthSelect = (month: number) => {
+    setSelectedMonth(month);
+    setZoomLevel('month');
+  };
+
+  // Handle year selection
+  const handleYearSelect = (year: number) => {
+    setSelectedYear(year);
+    setZoomLevel('month');
+  };
+
+  // Get days in month
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  // Get first day of month (0 = Sunday)
+  const getFirstDayOfMonth = (month: number, year: number) => {
+    return new Date(year, month, 1).getDay();
+  };
 
   // Show working hours (6 AM - 11 PM)
   const visibleHours = Array.from({ length: 18 }, (_, i) => i + 6);
@@ -111,6 +189,196 @@ export function ScheduleTab({
     );
   }
 
+  // Year View
+  if (zoomLevel === 'year') {
+    const years = [selectedYear - 1, selectedYear, selectedYear + 1, selectedYear + 2];
+    
+    return (
+      <div className="space-y-4 animate-scale-in">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-headline text-foreground">Calendar</h1>
+          {!isPremium && (
+            <button onClick={onUpgradeClick} className="badge-premium animate-pulse-soft">
+              ✨ PRO
+            </button>
+          )}
+        </div>
+
+        {/* Date selector - clickable to cycle */}
+        <GlassPanel className="p-4 cursor-pointer ios-press" variant="strong" onClick={handleZoomCycle}>
+          <div className="flex items-center justify-center gap-3">
+            <ZoomIn className="w-5 h-5 text-primary" />
+            <p className="text-title text-foreground">Select Year</p>
+          </div>
+        </GlassPanel>
+
+        {/* Years Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {years.map(year => {
+            const isCurrentYear = year === new Date().getFullYear();
+            const taskCount = tasks.filter(t => {
+              if (!t.dueDate) return false;
+              return new Date(t.dueDate).getFullYear() === year;
+            }).length;
+            
+            return (
+              <button
+                key={year}
+                onClick={() => handleYearSelect(year)}
+                className={cn(
+                  "glass rounded-2xl p-6 text-center transition-all duration-500 ios-press hover:scale-[1.02]",
+                  isCurrentYear && "ring-2 ring-primary/50"
+                )}
+              >
+                <p className={cn(
+                  "text-2xl font-bold mb-2 transition-colors",
+                  isCurrentYear ? "text-primary" : "text-foreground"
+                )}>
+                  {year}
+                </p>
+                {taskCount > 0 && (
+                  <p className="text-caption">{taskCount} tasks</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Month View
+  if (zoomLevel === 'month') {
+    const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+    const firstDay = getFirstDayOfMonth(selectedMonth, selectedYear);
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const today = new Date();
+    
+    return (
+      <div className="space-y-4 animate-scale-in">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-headline text-foreground">Schedule</h1>
+          {!isPremium && (
+            <button onClick={onUpgradeClick} className="badge-premium animate-pulse-soft">
+              ✨ PRO
+            </button>
+          )}
+        </div>
+
+        {/* Month selector - clickable to cycle */}
+        <GlassPanel className="p-3" variant="strong">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => {
+                if (selectedMonth === 0) {
+                  setSelectedMonth(11);
+                  setSelectedYear(selectedYear - 1);
+                } else {
+                  setSelectedMonth(selectedMonth - 1);
+                }
+              }}
+              className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            
+            <button 
+              onClick={handleZoomCycle}
+              className="text-center ios-press px-4 py-2 rounded-xl hover:bg-accent/50 transition-all duration-300"
+            >
+              <p className="text-title text-foreground">
+                {MONTH_FULL[selectedMonth]} {selectedYear}
+              </p>
+              <p className="text-micro flex items-center justify-center gap-1">
+                <ZoomOut className="w-3 h-3" /> Tap for years
+              </p>
+            </button>
+            
+            <button 
+              onClick={() => {
+                if (selectedMonth === 11) {
+                  setSelectedMonth(0);
+                  setSelectedYear(selectedYear + 1);
+                } else {
+                  setSelectedMonth(selectedMonth + 1);
+                }
+              }}
+              className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
+            >
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
+        </GlassPanel>
+
+        {/* Days of week header */}
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+            <div key={i} className="text-micro py-2">{day}</div>
+          ))}
+        </div>
+
+        {/* Days grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Empty cells for offset */}
+          {Array.from({ length: firstDay }).map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-square" />
+          ))}
+          
+          {days.map(day => {
+            const date = new Date(selectedYear, selectedMonth, day);
+            const isCurrentDay = date.toDateString() === today.toDateString();
+            const taskCount = getTaskCountForDate(date);
+            const hasCompleted = tasks.some(t => t.completedAt && new Date(t.completedAt).toDateString() === date.toDateString());
+            
+            return (
+              <button
+                key={day}
+                onClick={() => handleDaySelect(day)}
+                className={cn(
+                  "aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-300 ios-press relative",
+                  isCurrentDay ? "glass-strong ring-2 ring-primary" : "glass-subtle hover:bg-accent/30"
+                )}
+              >
+                <span className={cn(
+                  "text-sm font-semibold",
+                  isCurrentDay ? "text-primary" : "text-foreground"
+                )}>
+                  {day}
+                </span>
+                {taskCount > 0 && (
+                  <div className="absolute bottom-1 flex gap-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    {taskCount > 1 && <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />}
+                  </div>
+                )}
+                {hasCompleted && (
+                  <Check className="absolute top-1 right-1 w-3 h-3 text-success" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Month summary */}
+        <GlassPanel variant="subtle" className="p-4">
+          <div className="flex justify-around text-center">
+            <div>
+              <p className="text-2xl font-bold text-foreground">{getTaskCountForMonth(selectedMonth, selectedYear)}</p>
+              <p className="text-micro">Tasks</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-success">{getCompletedForMonth(selectedMonth, selectedYear)}</p>
+              <p className="text-micro">Completed</p>
+            </div>
+          </div>
+        </GlassPanel>
+      </div>
+    );
+  }
+
+  // Day View (default)
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
@@ -126,7 +394,7 @@ export function ScheduleTab({
         )}
       </div>
 
-      {/* Date selector */}
+      {/* Date selector - clickable to zoom out */}
       <GlassPanel className="p-3" variant="strong">
         <div className="flex items-center justify-between">
           <button 
@@ -136,14 +404,18 @@ export function ScheduleTab({
             <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </button>
           
-          <div className="text-center">
+          <button 
+            onClick={handleZoomCycle}
+            className="text-center ios-press px-4 py-2 rounded-xl hover:bg-accent/50 transition-all duration-300"
+          >
             <p className="text-title text-foreground">
               {isToday ? 'Today' : selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}
             </p>
-            <p className="text-caption">
+            <p className="text-caption flex items-center justify-center gap-1">
+              <Calendar className="w-3 h-3" />
               {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
-          </div>
+          </button>
           
           <button 
             onClick={handleNextDay}

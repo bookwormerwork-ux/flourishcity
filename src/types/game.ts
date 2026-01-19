@@ -11,6 +11,7 @@ export interface Task {
   createdAt: string;
   completedAt?: string;
   dueDate?: string;
+  scheduledTime?: string;
 }
 
 export interface CityStats {

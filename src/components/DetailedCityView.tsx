@@ -1,7 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { CityStats, Task, CATEGORY_ICONS } from '@/types/game';
 import { cn } from '@/lib/utils';
-import { X, Lock, User, Smile, Frown, Meh, Heart, Star, Sparkles } from 'lucide-react';
+import { 
+  X, 
+  Lock, 
+  User, 
+  Smile, 
+  Frown, 
+  Meh, 
+  Heart, 
+  Star, 
+  Sparkles,
+  Users,
+  TrendingUp,
+  Flame,
+  Building2,
+  Trophy,
+  Target,
+  Zap,
+  Crown
+} from 'lucide-react';
 
 interface DetailedCityViewProps {
   isOpen: boolean;
@@ -30,6 +48,15 @@ interface FloatingEmoji {
   startTime: number;
 }
 
+interface Cloud {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  speed: number;
+  opacity: number;
+}
+
 const MOOD_ICONS = {
   happy: Smile,
   neutral: Meh,
@@ -39,21 +66,57 @@ const MOOD_ICONS = {
 const MOOD_COLORS = {
   happy: 'text-success',
   neutral: 'text-muted-foreground',
-  sad: 'text-primary'
+  sad: 'text-destructive'
 };
 
 export function DetailedCityView({ 
   isOpen, 
   onClose, 
   stats, 
-  weather, 
+  weather,
   activeTasks,
   isPremium,
   onUpgradeClick
 }: DetailedCityViewProps) {
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
+  const [clouds, setClouds] = useState<Cloud[]>([]);
+  const [showPeopleStats, setShowPeopleStats] = useState(false);
+  const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const floatingInterval = useRef<NodeJS.Timeout | null>(null);
+  const cloudAnimationRef = useRef<number | null>(null);
+
+  // Generate clouds
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const initialClouds: Cloud[] = Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 120 - 10,
+      y: 5 + Math.random() * 25,
+      size: 60 + Math.random() * 80,
+      speed: 0.02 + Math.random() * 0.03,
+      opacity: 0.3 + Math.random() * 0.4
+    }));
+    setClouds(initialClouds);
+
+    // Animate clouds
+    const animateClouds = () => {
+      setClouds(prev => prev.map(cloud => ({
+        ...cloud,
+        x: cloud.x > 110 ? -20 : cloud.x + cloud.speed
+      })));
+      cloudAnimationRef.current = requestAnimationFrame(animateClouds);
+    };
+    
+    cloudAnimationRef.current = requestAnimationFrame(animateClouds);
+
+    return () => {
+      if (cloudAnimationRef.current) {
+        cancelAnimationFrame(cloudAnimationRef.current);
+      }
+    };
+  }, [isOpen]);
 
   // Generate citizens based on population and happiness
   useEffect(() => {
@@ -68,13 +131,13 @@ export function DetailedCityView({
 
     const animations: ('walk-1' | 'walk-2' | 'walk-3' | 'walk-4')[] = ['walk-1', 'walk-2', 'walk-3', 'walk-4'];
     
-    const newCitizens: Citizen[] = Array.from({ length: Math.min(stats.population, 15) }, (_, i) => ({
+    const newCitizens: Citizen[] = Array.from({ length: Math.min(stats.population, 12) }, (_, i) => ({
       id: i,
       x: 8 + Math.random() * 84,
-      y: 55 + Math.random() * 30,
+      y: 15 + Math.random() * 50,
       mood: getMood(),
       animation: animations[Math.floor(Math.random() * animations.length)],
-      scale: 0.7 + Math.random() * 0.5,
+      scale: 0.8 + Math.random() * 0.4,
       delay: Math.random() * 2
     }));
 
@@ -100,13 +163,11 @@ export function DetailedCityView({
         startTime: Date.now()
       };
 
-      setFloatingEmojis(prev => [...prev.slice(-8), newEmoji]);
+      setFloatingEmojis(prev => [...prev.slice(-6), newEmoji]);
     };
 
-    // Spawn initial emoji
     spawnFloatingEmoji();
-    
-    floatingInterval.current = setInterval(spawnFloatingEmoji, 2500);
+    floatingInterval.current = setInterval(spawnFloatingEmoji, 3000);
 
     return () => {
       if (floatingInterval.current) {
@@ -119,11 +180,16 @@ export function DetailedCityView({
   useEffect(() => {
     const cleanup = setInterval(() => {
       const now = Date.now();
-      setFloatingEmojis(prev => prev.filter(e => now - e.startTime < 3000));
+      setFloatingEmojis(prev => prev.filter(e => now - e.startTime < 4000));
     }, 1000);
 
     return () => clearInterval(cleanup);
   }, []);
+
+  const handleCitizenClick = (citizen: Citizen) => {
+    setSelectedCitizen(citizen);
+    setShowPeopleStats(true);
+  };
 
   if (!isOpen) return null;
 
@@ -167,180 +233,351 @@ export function DetailedCityView({
     return <Icon className={cn('w-6 h-6', MOOD_COLORS[mood], className)} />;
   };
 
-  return (
-    <>
-      {/* Fullscreen backdrop */}
-      <div className="fixed inset-0 z-40 animate-fade-in overflow-hidden">
-        {/* Sky */}
-        <div className={cn(
-          "absolute inset-0 transition-all duration-1000",
-          weather === 'sunny' && "bg-gradient-to-b from-city-sky via-city-sky/80 to-city-grass/30",
-          weather === 'partly-cloudy' && "bg-gradient-to-b from-city-sky/80 via-muted/40 to-city-grass/30",
-          weather === 'cloudy' && "bg-gradient-to-b from-muted via-muted/60 to-city-grass/30",
-          weather === 'rainy' && "bg-gradient-to-b from-secondary/60 via-muted/50 to-city-grass/30"
-        )} />
-
-        {/* Sun/Moon */}
-        {weather === 'sunny' && (
-          <div className="absolute top-20 right-20 w-24 h-24 rounded-full bg-gradient-to-br from-achievement-gold to-category-personal animate-pulse-soft shadow-glow" />
-        )}
-
-        {/* Floating clouds */}
-        {(weather === 'partly-cloudy' || weather === 'cloudy' || weather === 'rainy') && (
-          <>
-            <div className="absolute top-16 left-[10%] animate-float opacity-60">
-              <div className="w-16 h-10 bg-glass/40 rounded-full blur-sm" />
+  // People Stats Panel
+  const PeopleStatsPanel = () => {
+    const happyCitizens = citizens.filter(c => c.mood === 'happy').length;
+    const neutralCitizens = citizens.filter(c => c.mood === 'neutral').length;
+    const sadCitizens = citizens.filter(c => c.mood === 'sad').length;
+    
+    return (
+      <>
+        <div 
+          className="fixed inset-0 z-50"
+          onClick={() => setShowPeopleStats(false)}
+        />
+        <div className="fixed inset-x-4 top-20 bottom-20 z-50 flex items-center justify-center animate-scale-in">
+          <div className="glass-ultra rounded-[2rem] p-6 max-w-sm w-full max-h-full overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-headline text-foreground flex items-center gap-2">
+                <Users className="w-6 h-6 text-primary" />
+                City Population
+              </h2>
+              <button 
+                onClick={() => setShowPeopleStats(false)}
+                className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
-            <div className="absolute top-24 left-[40%] animate-float-slow opacity-40" style={{ animationDelay: '1s' }}>
-              <div className="w-20 h-12 bg-glass/50 rounded-full blur-sm" />
-            </div>
-            <div className="absolute top-12 right-[20%] animate-float opacity-50" style={{ animationDelay: '2s' }}>
-              <div className="w-24 h-14 bg-glass/45 rounded-full blur-sm" />
-            </div>
-          </>
-        )}
-
-        {/* Rain */}
-        {weather === 'rainy' && (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {Array.from({ length: 40 }).map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-0.5 h-8 bg-primary/20 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 60}%`,
-                  animation: `bounce-gentle ${1.5 + Math.random()}s ease-in-out infinite`,
-                  animationDelay: `${Math.random() * 2}s`
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Ground */}
-        <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-city-grass to-city-grass/60" />
-
-        {/* Buildings in background */}
-        <div className="absolute bottom-[40%] left-0 right-0 flex justify-center items-end gap-3 px-4">
-          {stats.buildings.slice(0, 8).map((building, i) => (
-            <div 
-              key={building.id}
-              className="flex flex-col items-center animate-fade-in"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              <div className={cn(
-                "glass rounded-2xl p-3 transition-all duration-500 hover:scale-105",
-                building.type === 'tower' && "p-4",
-                building.type === 'park' && "bg-city-grass/30"
-              )}>
-                <div className={cn(
-                  "flex items-center justify-center",
-                  building.type === 'tower' ? "w-10 h-10" : "w-8 h-8"
-                )}>
-                  {building.type === 'house' && <User className="w-full h-full text-foreground/70" />}
-                  {building.type === 'school' && <Star className="w-full h-full text-category-study" />}
-                  {building.type === 'office' && <Sparkles className="w-full h-full text-category-work" />}
-                  {building.type === 'gym' && <Heart className="w-full h-full text-category-habits" />}
-                  {building.type === 'park' && <Smile className="w-full h-full text-success" />}
-                  {building.type === 'tower' && <Star className="w-full h-full text-achievement-gold" />}
+            
+            {/* Population overview */}
+            <div className="glass rounded-2xl p-4 mb-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Users className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-foreground">{stats.population}</p>
+                  <p className="text-caption">Total Citizens</p>
+                </div>
+              </div>
+              
+              {/* Mood breakdown */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Smile className="w-5 h-5 text-success" />
+                    <span className="text-body">Happy</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-title text-foreground">{happyCitizens}</span>
+                    <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-success rounded-full transition-all duration-500"
+                        style={{ width: `${(happyCitizens / citizens.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Meh className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-body">Neutral</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-title text-foreground">{neutralCitizens}</span>
+                    <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-muted-foreground rounded-full transition-all duration-500"
+                        style={{ width: `${(neutralCitizens / citizens.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Frown className="w-5 h-5 text-destructive" />
+                    <span className="text-body">Sad</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-title text-foreground">{sadCitizens}</span>
+                    <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-destructive rounded-full transition-all duration-500"
+                        style={{ width: `${(sadCitizens / citizens.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Floating mood emojis (from city to sky) */}
-        {floatingEmojis.map(emoji => (
-          <div
-            key={emoji.id}
-            className="absolute animate-float-up-fade pointer-events-none"
-            style={{
-              left: `${emoji.x}%`,
-              bottom: '30%'
-            }}
-          >
-            <div className="glass-subtle rounded-full p-2">
-              <MoodIcon mood={emoji.emoji} className="w-5 h-5" />
-            </div>
-          </div>
-        ))}
-
-        {/* Walking citizens */}
-        <div className="absolute bottom-[12%] left-0 right-0 h-[28%]">
-          {citizens.map(citizen => (
-            <div
-              key={citizen.id}
-              className={cn(
-                "absolute transition-all duration-700",
-                `animate-${citizen.animation}`
-              )}
-              style={{
-                left: `${citizen.x}%`,
-                top: `${citizen.y}%`,
-                transform: `scale(${citizen.scale})`,
-                animationDelay: `${citizen.delay}s`
-              }}
-            >
-              <div className="glass-subtle rounded-full p-2 shadow-lg cursor-pointer hover:scale-110 transition-all duration-300">
-                <MoodIcon mood={citizen.mood} className="w-6 h-6" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Active tasks floating as signs */}
-        {activeTasks.slice(0, 3).map((task, i) => (
-          <div
-            key={task.id}
-            className="absolute glass rounded-2xl px-4 py-2 animate-float shadow-lg"
-            style={{
-              bottom: `${28 + i * 7}%`,
-              left: `${12 + i * 28}%`,
-              animationDelay: `${i * 0.5}s`
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xl">{CATEGORY_ICONS[task.category]}</span>
-              <span className="text-sm font-medium text-foreground max-w-[100px] truncate">
-                {task.title}
-              </span>
-            </div>
-          </div>
-        ))}
-
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 glass-strong p-3 rounded-2xl ios-press transition-all duration-300 hover:scale-105"
-        >
-          <X className="w-6 h-6 text-foreground" />
-        </button>
-
-        {/* Stats overlay */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="glass-ultra rounded-[2rem] p-5">
-            <div className="flex items-center justify-between">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.population}</p>
-                <p className="text-micro">Citizens</p>
-              </div>
-              <div className="text-center">
+            
+            {/* City stats grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="glass rounded-xl p-3 text-center">
+                <TrendingUp className="w-6 h-6 text-primary mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{stats.happiness}%</p>
                 <p className="text-micro">Happiness</p>
               </div>
-              <div className="text-center">
+              <div className="glass rounded-xl p-3 text-center">
+                <Flame className="w-6 h-6 text-category-personal mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{stats.streak}</p>
                 <p className="text-micro">Day Streak</p>
               </div>
-              <div className="text-center">
+              <div className="glass rounded-xl p-3 text-center">
+                <Building2 className="w-6 h-6 text-category-work mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{stats.buildings.length}</p>
                 <p className="text-micro">Buildings</p>
               </div>
+              <div className="glass rounded-xl p-3 text-center">
+                <Target className="w-6 h-6 text-success mx-auto mb-1" />
+                <p className="text-2xl font-bold text-foreground">{stats.totalTasksCompleted}</p>
+                <p className="text-micro">Tasks Done</p>
+              </div>
+            </div>
+            
+            {/* Competitive section */}
+            <div className="glass-premium rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="w-5 h-5 text-achievement-gold" />
+                <h3 className="text-title text-foreground">Your Ranking</h3>
+              </div>
+              
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-achievement-gold" />
+                  <span className="text-body">League</span>
+                </div>
+                <span className="badge-premium">
+                  {stats.totalTasksCompleted >= 100 ? 'Diamond' :
+                   stats.totalTasksCompleted >= 50 ? 'Platinum' :
+                   stats.totalTasksCompleted >= 25 ? 'Gold' :
+                   stats.totalTasksCompleted >= 10 ? 'Silver' : 'Bronze'}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  <span className="text-body">Weekly XP</span>
+                </div>
+                <span className="text-title text-foreground">{stats.totalTasksCompleted * 10} XP</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-success" />
+                  <span className="text-body">Global Rank</span>
+                </div>
+                <span className="text-title text-foreground">#{Math.max(1, 1000 - stats.totalTasksCompleted * 5)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-40 animate-fade-in overflow-hidden">
+      {/* Full sky background */}
+      <div className={cn(
+        "absolute inset-0 transition-all duration-1000",
+        weather === 'sunny' && "bg-gradient-to-b from-[#87CEEB] via-[#B0E0E6] to-[#87CEEB]",
+        weather === 'partly-cloudy' && "bg-gradient-to-b from-[#87CEEB]/80 via-[#D3D3D3]/40 to-[#87CEEB]/60",
+        weather === 'cloudy' && "bg-gradient-to-b from-[#778899] via-[#B0C4DE] to-[#778899]",
+        weather === 'rainy' && "bg-gradient-to-b from-[#4A5568] via-[#718096] to-[#4A5568]"
+      )} />
+
+      {/* Sun */}
+      {weather === 'sunny' && (
+        <div className="absolute top-16 right-12 w-20 h-20 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 animate-pulse-soft shadow-[0_0_60px_30px_rgba(255,200,0,0.3)]" />
+      )}
+
+      {/* Animated clouds */}
+      {clouds.map(cloud => (
+        <div
+          key={cloud.id}
+          className="absolute transition-none"
+          style={{
+            left: `${cloud.x}%`,
+            top: `${cloud.y}%`,
+            opacity: cloud.opacity
+          }}
+        >
+          <div 
+            className="bg-white rounded-full blur-sm"
+            style={{
+              width: cloud.size,
+              height: cloud.size * 0.5
+            }}
+          />
+        </div>
+      ))}
+
+      {/* Rain */}
+      {weather === 'rainy' && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 50 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-0.5 h-6 bg-white/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 60}%`,
+                animation: `bounce-gentle ${1 + Math.random()}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Ground */}
+      <div className="absolute bottom-0 left-0 right-0 h-[35%] bg-gradient-to-t from-[#228B22] via-[#32CD32]/80 to-transparent" />
+
+      {/* Buildings in background */}
+      <div className="absolute bottom-[32%] left-0 right-0 flex justify-center items-end gap-2 px-2">
+        {stats.buildings.slice(0, 6).map((building, i) => (
+          <div 
+            key={building.id}
+            className="flex flex-col items-center animate-fade-in"
+            style={{ animationDelay: `${i * 0.1}s` }}
+          >
+            <div className={cn(
+              "glass rounded-xl p-2 transition-all duration-500 hover:scale-105",
+              building.type === 'tower' && "p-3"
+            )}>
+              <div className={cn(
+                "flex items-center justify-center",
+                building.type === 'tower' ? "w-8 h-8" : "w-6 h-6"
+              )}>
+                {building.type === 'house' && <User className="w-full h-full text-foreground/70" />}
+                {building.type === 'school' && <Star className="w-full h-full text-category-study" />}
+                {building.type === 'office' && <Sparkles className="w-full h-full text-category-work" />}
+                {building.type === 'gym' && <Heart className="w-full h-full text-category-habits" />}
+                {building.type === 'park' && <Smile className="w-full h-full text-success" />}
+                {building.type === 'tower' && <Star className="w-full h-full text-achievement-gold" />}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Floating mood emojis (from city to sky) */}
+      {floatingEmojis.map(emoji => (
+        <div
+          key={emoji.id}
+          className="absolute animate-float-up-fade pointer-events-none"
+          style={{
+            left: `${emoji.x}%`,
+            bottom: '35%'
+          }}
+        >
+          <div className="glass-subtle rounded-full p-2">
+            <MoodIcon mood={emoji.emoji} className="w-5 h-5" />
+          </div>
+        </div>
+      ))}
+
+      {/* Walking citizens */}
+      <div className="absolute bottom-[8%] left-0 right-0 h-[27%]">
+        {citizens.map(citizen => (
+          <button
+            key={citizen.id}
+            onClick={() => handleCitizenClick(citizen)}
+            className={cn(
+              "absolute transition-all duration-700 ios-press",
+              `animate-${citizen.animation}`
+            )}
+            style={{
+              left: `${citizen.x}%`,
+              top: `${citizen.y}%`,
+              transform: `scale(${citizen.scale})`,
+              animationDelay: `${citizen.delay}s`
+            }}
+          >
+            <div className="glass-strong rounded-full p-2 shadow-lg hover:scale-110 transition-all duration-300">
+              <MoodIcon mood={citizen.mood} className="w-5 h-5" />
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Active tasks floating as signs */}
+      {activeTasks.slice(0, 2).map((task, i) => (
+        <div
+          key={task.id}
+          className="absolute glass rounded-xl px-3 py-2 animate-float shadow-lg"
+          style={{
+            bottom: `${40 + i * 8}%`,
+            left: `${10 + i * 35}%`,
+            animationDelay: `${i * 0.5}s`
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">{CATEGORY_ICONS[task.category]}</span>
+            <span className="text-xs font-medium text-foreground max-w-[80px] truncate">
+              {task.title}
+            </span>
+          </div>
+        </div>
+      ))}
+
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 glass-strong p-3 rounded-2xl ios-press transition-all duration-300 hover:scale-105 z-10"
+      >
+        <X className="w-6 h-6 text-foreground" />
+      </button>
+
+      {/* People stats button */}
+      <button
+        onClick={() => setShowPeopleStats(true)}
+        className="absolute top-4 left-4 glass-strong p-3 rounded-2xl ios-press transition-all duration-300 hover:scale-105 z-10"
+      >
+        <Users className="w-6 h-6 text-foreground" />
+      </button>
+
+      {/* Stats overlay */}
+      <div className="absolute bottom-4 left-4 right-4 z-10">
+        <div className="glass-ultra rounded-2xl p-4">
+          <div className="flex items-center justify-around">
+            <div className="text-center">
+              <p className="text-xl font-bold text-foreground">{stats.population}</p>
+              <p className="text-micro">Citizens</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-foreground">{stats.happiness}%</p>
+              <p className="text-micro">Happiness</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-foreground">{stats.streak}</p>
+              <p className="text-micro">Streak</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-foreground">{stats.buildings.length}</p>
+              <p className="text-micro">Buildings</p>
             </div>
           </div>
         </div>
       </div>
-    </>
+
+      {/* People Stats Panel */}
+      {showPeopleStats && <PeopleStatsPanel />}
+    </div>
   );
 }

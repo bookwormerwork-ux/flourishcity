@@ -36,8 +36,14 @@ const Index = () => {
     checkAchievements();
   }, [cityStats.totalTasksCompleted, cityStats.streak, checkAchievements]);
 
-  const handleAddTask = useCallback((title: string, category: TaskCategory, priority: TaskPriority) => {
-    addTask(title, category, priority);
+  const handleAddTask = useCallback((
+    title: string, 
+    category: TaskCategory, 
+    priority: TaskPriority,
+    scheduledDate?: string,
+    scheduledTime?: string
+  ) => {
+    addTask(title, category, priority, scheduledDate, scheduledTime);
   }, [addTask]);
 
   const handleCompleteTask = useCallback((id: string) => {
@@ -133,9 +139,26 @@ const Index = () => {
       ))}
 
       {/* Sheets */}
-      <AddTaskSheet isOpen={showAddSheet} onClose={() => setShowAddSheet(false)} onAdd={handleAddTask} />
-      <SubscriptionSheet isOpen={showSubscription} onClose={() => setShowSubscription(false)} onSubscribe={subscribe} currentPlan={plan} />
-      <DetailedCityView isOpen={showDetailedCity} onClose={() => setShowDetailedCity(false)} stats={cityStats} weather={weather as WeatherType} activeTasks={activeTasks} isPremium={isPremium} onUpgradeClick={() => { setShowDetailedCity(false); setShowSubscription(true); }} />
+      <AddTaskSheet 
+        isOpen={showAddSheet} 
+        onClose={() => setShowAddSheet(false)} 
+        onAdd={handleAddTask} 
+      />
+      <SubscriptionSheet 
+        isOpen={showSubscription} 
+        onClose={() => setShowSubscription(false)} 
+        onSubscribe={subscribe} 
+        currentPlan={plan} 
+      />
+      <DetailedCityView 
+        isOpen={showDetailedCity} 
+        onClose={() => setShowDetailedCity(false)} 
+        stats={cityStats} 
+        weather={weather as WeatherType} 
+        activeTasks={activeTasks} 
+        isPremium={isPremium} 
+        onUpgradeClick={() => { setShowDetailedCity(false); setShowSubscription(true); }} 
+      />
     </div>
   );
 };
