@@ -6,13 +6,15 @@ interface GlassPanelProps {
   className?: string;
   variant?: 'default' | 'strong' | 'subtle' | 'ultra';
   animate?: boolean;
+  onClick?: () => void;
 }
 
 export function GlassPanel({ 
   children, 
   className, 
   variant = 'default',
-  animate = true 
+  animate = true,
+  onClick
 }: GlassPanelProps) {
   const variants = {
     default: 'glass',
@@ -27,8 +29,10 @@ export function GlassPanel({
         variants[variant],
         'rounded-2xl p-4 transition-all duration-500',
         animate && 'animate-fade-in',
+        onClick && 'cursor-pointer',
         className
       )}
+      onClick={onClick}
     >
       {children}
     </div>

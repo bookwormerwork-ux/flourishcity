@@ -22,7 +22,7 @@ export function useGameState() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('flourish-tasks', []);
   const [cityStats, setCityStats] = useLocalStorage<CityStats>('flourish-city', DEFAULT_CITY_STATS);
 
-  const addTask = useCallback((title: string, category: TaskCategory, priority: Task['priority'] = 'medium', dueDate?: string) => {
+  const addTask = useCallback((title: string, category: TaskCategory, priority: Task['priority'] = 'medium', dueDate?: string, scheduledTime?: string) => {
     const newTask: Task = {
       id: generateId(),
       title,
@@ -30,7 +30,8 @@ export function useGameState() {
       priority,
       completed: false,
       createdAt: new Date().toISOString(),
-      dueDate
+      dueDate,
+      scheduledTime
     };
     setTasks(prev => [newTask, ...prev]);
     return newTask;
