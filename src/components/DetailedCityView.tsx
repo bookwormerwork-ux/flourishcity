@@ -82,7 +82,6 @@ export function DetailedCityView({
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [clouds, setClouds] = useState<Cloud[]>([]);
   const [showPeopleStats, setShowPeopleStats] = useState(false);
-  const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const floatingInterval = useRef<NodeJS.Timeout | null>(null);
   const cloudAnimationRef = useRef<number | null>(null);
 
@@ -100,7 +99,6 @@ export function DetailedCityView({
     }));
     setClouds(initialClouds);
 
-    // Animate clouds
     const animateClouds = () => {
       setClouds(prev => prev.map(cloud => ({
         ...cloud,
@@ -118,7 +116,7 @@ export function DetailedCityView({
     };
   }, [isOpen]);
 
-  // Generate citizens based on population and happiness
+  // Generate citizens
   useEffect(() => {
     if (!isOpen) return;
 
@@ -144,7 +142,7 @@ export function DetailedCityView({
     setCitizens(newCitizens);
   }, [isOpen, stats.population, stats.happiness]);
 
-  // Floating emojis effect
+  // Floating emojis
   useEffect(() => {
     if (!isOpen || !isPremium) return;
 
@@ -176,7 +174,7 @@ export function DetailedCityView({
     };
   }, [isOpen, isPremium, stats.happiness]);
 
-  // Cleanup old floating emojis
+  // Cleanup old emojis
   useEffect(() => {
     const cleanup = setInterval(() => {
       const now = Date.now();
@@ -186,45 +184,34 @@ export function DetailedCityView({
     return () => clearInterval(cleanup);
   }, []);
 
-  const handleCitizenClick = (citizen: Citizen) => {
-    setSelectedCitizen(citizen);
-    setShowPeopleStats(true);
-  };
-
   if (!isOpen) return null;
 
-  // Non-premium users see a teaser
+  // Non-premium teaser
   if (!isPremium) {
     return (
-      <>
-        <div 
-          className="fixed inset-0 overlay-blur-strong z-40 animate-fade-in"
-          onClick={onClose}
-        />
-        <div className="fixed inset-4 z-50 flex items-center justify-center">
-          <div className="glass-ultra rounded-[2rem] p-8 max-w-sm text-center animate-scale-in">
-            <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 animate-breathe">
-              <Lock className="w-10 h-10 text-primary" />
-            </div>
-            <h2 className="text-headline text-foreground mb-2">Unlock City View</h2>
-            <p className="text-caption mb-6">
-              Zoom into your city, see citizens walking around, and watch your world come alive!
-            </p>
-            <button 
-              onClick={onUpgradeClick}
-              className="pill-primary w-full mb-3 transition-all duration-300 hover:scale-[1.02]"
-            >
-              Upgrade to Pro
-            </button>
-            <button 
-              onClick={onClose}
-              className="pill-ghost w-full transition-all duration-300"
-            >
-              Maybe Later
-            </button>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background animate-fade-in">
+        <div className="glass-ultra rounded-[2rem] p-8 max-w-sm text-center animate-scale-in mx-4">
+          <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 animate-breathe">
+            <Lock className="w-10 h-10 text-primary" />
           </div>
+          <h2 className="text-headline text-foreground mb-2">Unlock City View</h2>
+          <p className="text-caption mb-6">
+            Zoom into your city, see citizens walking around, and watch your world come alive!
+          </p>
+          <button 
+            onClick={onUpgradeClick}
+            className="pill-primary w-full mb-3 transition-all duration-300 hover:scale-[1.02]"
+          >
+            Upgrade to Pro
+          </button>
+          <button 
+            onClick={onClose}
+            className="pill-ghost w-full transition-all duration-300"
+          >
+            Maybe Later
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -233,170 +220,18 @@ export function DetailedCityView({
     return <Icon className={cn('w-6 h-6', MOOD_COLORS[mood], className)} />;
   };
 
-  // People Stats Panel
-  const PeopleStatsPanel = () => {
-    const happyCitizens = citizens.filter(c => c.mood === 'happy').length;
-    const neutralCitizens = citizens.filter(c => c.mood === 'neutral').length;
-    const sadCitizens = citizens.filter(c => c.mood === 'sad').length;
-    
-    return (
-      <>
-        <div 
-          className="fixed inset-0 z-50"
-          onClick={() => setShowPeopleStats(false)}
-        />
-        <div className="fixed inset-x-4 top-20 bottom-20 z-50 flex items-center justify-center animate-scale-in">
-          <div className="glass-ultra rounded-[2rem] p-6 max-w-sm w-full max-h-full overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-headline text-foreground flex items-center gap-2">
-                <Users className="w-6 h-6 text-primary" />
-                City Population
-              </h2>
-              <button 
-                onClick={() => setShowPeopleStats(false)}
-                className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-            
-            {/* Population overview */}
-            <div className="glass rounded-2xl p-4 mb-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Users className="w-7 h-7 text-primary" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-foreground">{stats.population}</p>
-                  <p className="text-caption">Total Citizens</p>
-                </div>
-              </div>
-              
-              {/* Mood breakdown */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Smile className="w-5 h-5 text-success" />
-                    <span className="text-body">Happy</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-title text-foreground">{happyCitizens}</span>
-                    <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-success rounded-full transition-all duration-500"
-                        style={{ width: `${(happyCitizens / citizens.length) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Meh className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-body">Neutral</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-title text-foreground">{neutralCitizens}</span>
-                    <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-muted-foreground rounded-full transition-all duration-500"
-                        style={{ width: `${(neutralCitizens / citizens.length) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Frown className="w-5 h-5 text-destructive" />
-                    <span className="text-body">Sad</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-title text-foreground">{sadCitizens}</span>
-                    <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-destructive rounded-full transition-all duration-500"
-                        style={{ width: `${(sadCitizens / citizens.length) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* City stats grid */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="glass rounded-xl p-3 text-center">
-                <TrendingUp className="w-6 h-6 text-primary mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">{stats.happiness}%</p>
-                <p className="text-micro">Happiness</p>
-              </div>
-              <div className="glass rounded-xl p-3 text-center">
-                <Flame className="w-6 h-6 text-category-personal mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">{stats.streak}</p>
-                <p className="text-micro">Day Streak</p>
-              </div>
-              <div className="glass rounded-xl p-3 text-center">
-                <Building2 className="w-6 h-6 text-category-work mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">{stats.buildings.length}</p>
-                <p className="text-micro">Buildings</p>
-              </div>
-              <div className="glass rounded-xl p-3 text-center">
-                <Target className="w-6 h-6 text-success mx-auto mb-1" />
-                <p className="text-2xl font-bold text-foreground">{stats.totalTasksCompleted}</p>
-                <p className="text-micro">Tasks Done</p>
-              </div>
-            </div>
-            
-            {/* Competitive section */}
-            <div className="glass-premium rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Trophy className="w-5 h-5 text-achievement-gold" />
-                <h3 className="text-title text-foreground">Your Ranking</h3>
-              </div>
-              
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-achievement-gold" />
-                  <span className="text-body">League</span>
-                </div>
-                <span className="badge-premium">
-                  {stats.totalTasksCompleted >= 100 ? 'Diamond' :
-                   stats.totalTasksCompleted >= 50 ? 'Platinum' :
-                   stats.totalTasksCompleted >= 25 ? 'Gold' :
-                   stats.totalTasksCompleted >= 10 ? 'Silver' : 'Bronze'}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  <span className="text-body">Weekly XP</span>
-                </div>
-                <span className="text-title text-foreground">{stats.totalTasksCompleted * 10} XP</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-success" />
-                  <span className="text-body">Global Rank</span>
-                </div>
-                <span className="text-title text-foreground">#{Math.max(1, 1000 - stats.totalTasksCompleted * 5)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  };
+  const happyCitizens = citizens.filter(c => c.mood === 'happy').length;
+  const neutralCitizens = citizens.filter(c => c.mood === 'neutral').length;
+  const sadCitizens = citizens.filter(c => c.mood === 'sad').length;
+  const citizenCount = citizens.length || 1;
 
   return (
-    <div className="fixed inset-0 z-40 animate-fade-in overflow-hidden">
-      {/* Full sky background */}
+    <div className="fixed inset-0 z-[100] animate-fade-in overflow-hidden">
+      {/* Full sky background - SOLID, no blur */}
       <div className={cn(
-        "absolute inset-0 transition-all duration-1000",
+        "absolute inset-0",
         weather === 'sunny' && "bg-gradient-to-b from-[#87CEEB] via-[#B0E0E6] to-[#87CEEB]",
-        weather === 'partly-cloudy' && "bg-gradient-to-b from-[#87CEEB]/80 via-[#D3D3D3]/40 to-[#87CEEB]/60",
+        weather === 'partly-cloudy' && "bg-gradient-to-b from-[#87CEEB] via-[#D3D3D3] to-[#87CEEB]",
         weather === 'cloudy' && "bg-gradient-to-b from-[#778899] via-[#B0C4DE] to-[#778899]",
         weather === 'rainy' && "bg-gradient-to-b from-[#4A5568] via-[#718096] to-[#4A5568]"
       )} />
@@ -410,7 +245,7 @@ export function DetailedCityView({
       {clouds.map(cloud => (
         <div
           key={cloud.id}
-          className="absolute transition-none"
+          className="absolute"
           style={{
             left: `${cloud.x}%`,
             top: `${cloud.y}%`,
@@ -448,7 +283,7 @@ export function DetailedCityView({
       {/* Ground */}
       <div className="absolute bottom-0 left-0 right-0 h-[35%] bg-gradient-to-t from-[#228B22] via-[#32CD32]/80 to-transparent" />
 
-      {/* Buildings in background */}
+      {/* Buildings */}
       <div className="absolute bottom-[32%] left-0 right-0 flex justify-center items-end gap-2 px-2">
         {stats.buildings.slice(0, 6).map((building, i) => (
           <div 
@@ -476,7 +311,7 @@ export function DetailedCityView({
         ))}
       </div>
 
-      {/* Floating mood emojis (from city to sky) */}
+      {/* Floating mood icons */}
       {floatingEmojis.map(emoji => (
         <div
           key={emoji.id}
@@ -497,7 +332,7 @@ export function DetailedCityView({
         {citizens.map(citizen => (
           <button
             key={citizen.id}
-            onClick={() => handleCitizenClick(citizen)}
+            onClick={() => setShowPeopleStats(true)}
             className={cn(
               "absolute transition-all duration-700 ios-press",
               `animate-${citizen.animation}`
@@ -516,7 +351,7 @@ export function DetailedCityView({
         ))}
       </div>
 
-      {/* Active tasks floating as signs */}
+      {/* Task signs */}
       {activeTasks.slice(0, 2).map((task, i) => (
         <div
           key={task.id}
@@ -552,7 +387,7 @@ export function DetailedCityView({
         <Users className="w-6 h-6 text-foreground" />
       </button>
 
-      {/* Stats overlay */}
+      {/* Bottom stats */}
       <div className="absolute bottom-4 left-4 right-4 z-10">
         <div className="glass-ultra rounded-2xl p-4">
           <div className="flex items-center justify-around">
@@ -577,7 +412,155 @@ export function DetailedCityView({
       </div>
 
       {/* People Stats Panel */}
-      {showPeopleStats && <PeopleStatsPanel />}
+      {showPeopleStats && (
+        <>
+          <div 
+            className="fixed inset-0 z-[110] bg-black/50"
+            onClick={() => setShowPeopleStats(false)}
+          />
+          <div className="fixed inset-x-4 top-16 bottom-16 z-[120] flex items-center justify-center animate-scale-in">
+            <div className="glass-ultra rounded-[2rem] p-6 max-w-sm w-full max-h-full overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-headline text-foreground flex items-center gap-2">
+                  <Users className="w-6 h-6 text-primary" />
+                  City Population
+                </h2>
+                <button 
+                  onClick={() => setShowPeopleStats(false)}
+                  className="p-2 rounded-xl hover:bg-accent/50 transition-all duration-300 ios-press"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+              
+              {/* Population overview */}
+              <div className="glass rounded-2xl p-4 mb-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Users className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold text-foreground">{stats.population}</p>
+                    <p className="text-caption">Total Citizens</p>
+                  </div>
+                </div>
+                
+                {/* Mood breakdown */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Smile className="w-5 h-5 text-success" />
+                      <span className="text-body">Happy</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-title text-foreground">{happyCitizens}</span>
+                      <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-success rounded-full transition-all duration-500"
+                          style={{ width: `${(happyCitizens / citizenCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Meh className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-body">Neutral</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-title text-foreground">{neutralCitizens}</span>
+                      <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-muted-foreground rounded-full transition-all duration-500"
+                          style={{ width: `${(neutralCitizens / citizenCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Frown className="w-5 h-5 text-destructive" />
+                      <span className="text-body">Sad</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-title text-foreground">{sadCitizens}</span>
+                      <div className="w-20 h-2 bg-accent rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-destructive rounded-full transition-all duration-500"
+                          style={{ width: `${(sadCitizens / citizenCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="glass rounded-xl p-3 text-center">
+                  <TrendingUp className="w-6 h-6 text-primary mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-foreground">{stats.happiness}%</p>
+                  <p className="text-micro">Happiness</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <Flame className="w-6 h-6 text-category-personal mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-foreground">{stats.streak}</p>
+                  <p className="text-micro">Day Streak</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <Building2 className="w-6 h-6 text-category-work mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-foreground">{stats.buildings.length}</p>
+                  <p className="text-micro">Buildings</p>
+                </div>
+                <div className="glass rounded-xl p-3 text-center">
+                  <Target className="w-6 h-6 text-success mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-foreground">{stats.totalTasksCompleted}</p>
+                  <p className="text-micro">Tasks Done</p>
+                </div>
+              </div>
+              
+              {/* Ranking */}
+              <div className="glass-premium rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="w-5 h-5 text-achievement-gold" />
+                  <h3 className="text-title text-foreground">Your Ranking</h3>
+                </div>
+                
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-achievement-gold" />
+                    <span className="text-body">League</span>
+                  </div>
+                  <span className="badge-premium">
+                    {stats.totalTasksCompleted >= 100 ? 'Diamond' :
+                     stats.totalTasksCompleted >= 50 ? 'Platinum' :
+                     stats.totalTasksCompleted >= 25 ? 'Gold' :
+                     stats.totalTasksCompleted >= 10 ? 'Silver' : 'Bronze'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-primary" />
+                    <span className="text-body">Weekly XP</span>
+                  </div>
+                  <span className="text-title text-foreground">{stats.totalTasksCompleted * 10} XP</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-success" />
+                    <span className="text-body">Global Rank</span>
+                  </div>
+                  <span className="text-title text-foreground">#{Math.max(1, 1000 - stats.totalTasksCompleted * 5)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

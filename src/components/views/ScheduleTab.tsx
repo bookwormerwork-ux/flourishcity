@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { GlassPanel } from '@/components/GlassPanel';
 import { Task, CATEGORY_ICONS } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,8 @@ import {
   X,
   Check,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  GripVertical
 } from 'lucide-react';
 
 type ZoomLevel = 'day' | 'month' | 'year';
@@ -27,7 +28,6 @@ interface ScheduleTabProps {
   onUpgradeClick: () => void;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function ScheduleTab({ 
@@ -43,21 +43,37 @@ export function ScheduleTab({
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('day');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [dragOverHour, setDragOverHour] = useState<number | null>(null);
   
-  const unscheduledTasks = useMemo(() => 
-    tasks.filter(t => !t.completed && !Object.values(scheduleByHour).flat().find(s => s?.id === t.id))
-  , [tasks, scheduleByHour]);
+  // Get scheduled tasks for the selected date
+  const scheduledTasksForDate = useMemo(() => {
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    return tasks.filter(t => t.dueDate === dateStr && t.scheduledTime);
+  }, [tasks, selectedDate]);
 
-  // Get task count for a specific date
+  // Build schedule by hour for selected date
+  const dateScheduleByHour = useMemo(() => {
+    const schedule: Record<number, Task[]> = {};
+    scheduledTasksForDate.forEach(task => {
+      if (task.scheduledTime) {
+        const hour = parseInt(task.scheduledTime.split(':')[0]);
+        if (!schedule[hour]) schedule[hour] = [];
+        schedule[hour].push(task);
+      }
+    });
+    return schedule;
+  }, [scheduledTasksForDate]);
+
+  const unscheduledTasks = useMemo(() => 
+    tasks.filter(t => !t.completed && !t.scheduledTime)
+  , [tasks]);
+
   const getTaskCountForDate = (date: Date) => {
-    return tasks.filter(t => {
-      if (!t.dueDate) return false;
-      const taskDate = new Date(t.dueDate);
-      return taskDate.toDateString() === date.toDateString();
-    }).length;
+    const dateStr = date.toISOString().split('T')[0];
+    return tasks.filter(t => t.dueDate === dateStr).length;
   };
 
-  // Get task count for a month
   const getTaskCountForMonth = (month: number, year: number) => {
     return tasks.filter(t => {
       if (!t.dueDate) return false;
@@ -66,7 +82,6 @@ export function ScheduleTab({
     }).length;
   };
 
-  // Get completed count for a month
   const getCompletedForMonth = (month: number, year: number) => {
     return tasks.filter(t => {
       if (!t.completedAt) return false;
@@ -108,39 +123,59 @@ export function ScheduleTab({
     }
   };
 
-  // Handle date selection from month view
   const handleDaySelect = (day: number) => {
     const newDate = new Date(selectedYear, selectedMonth, day);
     setSelectedDate(newDate);
     setZoomLevel('day');
   };
 
-  // Handle month selection from year view
   const handleMonthSelect = (month: number) => {
     setSelectedMonth(month);
     setZoomLevel('month');
   };
 
-  // Handle year selection
   const handleYearSelect = (year: number) => {
     setSelectedYear(year);
     setZoomLevel('month');
   };
 
-  // Get days in month
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
 
-  // Get first day of month (0 = Sunday)
   const getFirstDayOfMonth = (month: number, year: number) => {
     return new Date(year, month, 1).getDay();
   };
 
-  // Show working hours (6 AM - 11 PM)
+  // Drag & drop handlers
+  const handleDragStart = (task: Task) => {
+    if (!isPremium) return;
+    setDraggedTask(task);
+  };
+
+  const handleDragOver = (e: React.DragEvent, hour: number) => {
+    e.preventDefault();
+    setDragOverHour(hour);
+  };
+
+  const handleDrop = (hour: number) => {
+    if (draggedTask && isPremium) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+      onScheduleTask(draggedTask.id, `${dateStr}T${timeStr}`);
+    }
+    setDraggedTask(null);
+    setDragOverHour(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTask(null);
+    setDragOverHour(null);
+  };
+
   const visibleHours = Array.from({ length: 18 }, (_, i) => i + 6);
 
-  // Focus mode overlay
+  // Focus mode
   if (focusTask) {
     return (
       <>
@@ -195,7 +230,6 @@ export function ScheduleTab({
     
     return (
       <div className="space-y-4 animate-scale-in">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-headline text-foreground">Calendar</h1>
           {!isPremium && (
@@ -205,15 +239,13 @@ export function ScheduleTab({
           )}
         </div>
 
-        {/* Date selector - clickable to cycle */}
         <GlassPanel className="p-4 cursor-pointer ios-press" variant="strong" onClick={handleZoomCycle}>
           <div className="flex items-center justify-center gap-3">
             <ZoomIn className="w-5 h-5 text-primary" />
-            <p className="text-title text-foreground">Select Year</p>
+            <p className="text-title text-foreground">Tap to zoom in</p>
           </div>
         </GlassPanel>
 
-        {/* Years Grid */}
         <div className="grid grid-cols-2 gap-3">
           {years.map(year => {
             const isCurrentYear = year === new Date().getFullYear();
@@ -232,7 +264,7 @@ export function ScheduleTab({
                 )}
               >
                 <p className={cn(
-                  "text-2xl font-bold mb-2 transition-colors",
+                  "text-2xl font-bold mb-2",
                   isCurrentYear ? "text-primary" : "text-foreground"
                 )}>
                   {year}
@@ -257,7 +289,6 @@ export function ScheduleTab({
     
     return (
       <div className="space-y-4 animate-scale-in">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-headline text-foreground">Schedule</h1>
           {!isPremium && (
@@ -267,7 +298,6 @@ export function ScheduleTab({
           )}
         </div>
 
-        {/* Month selector - clickable to cycle */}
         <GlassPanel className="p-3" variant="strong">
           <div className="flex items-center justify-between">
             <button 
@@ -312,16 +342,13 @@ export function ScheduleTab({
           </div>
         </GlassPanel>
 
-        {/* Days of week header */}
         <div className="grid grid-cols-7 gap-1 text-center">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
             <div key={i} className="text-micro py-2">{day}</div>
           ))}
         </div>
 
-        {/* Days grid */}
         <div className="grid grid-cols-7 gap-1">
-          {/* Empty cells for offset */}
           {Array.from({ length: firstDay }).map((_, i) => (
             <div key={`empty-${i}`} className="aspect-square" />
           ))}
@@ -361,7 +388,6 @@ export function ScheduleTab({
           })}
         </div>
 
-        {/* Month summary */}
         <GlassPanel variant="subtle" className="p-4">
           <div className="flex justify-around text-center">
             <div>
@@ -378,23 +404,19 @@ export function ScheduleTab({
     );
   }
 
-  // Day View (default)
+  // Day View
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-headline text-foreground">Schedule</h1>
         {!isPremium && (
-          <button 
-            onClick={onUpgradeClick}
-            className="badge-premium animate-pulse-soft"
-          >
+          <button onClick={onUpgradeClick} className="badge-premium animate-pulse-soft">
             ✨ PRO
           </button>
         )}
       </div>
 
-      {/* Date selector - clickable to zoom out */}
+      {/* Date selector - CLICKABLE to zoom out */}
       <GlassPanel className="p-3" variant="strong">
         <div className="flex items-center justify-between">
           <button 
@@ -414,6 +436,7 @@ export function ScheduleTab({
             <p className="text-caption flex items-center justify-center gap-1">
               <Calendar className="w-3 h-3" />
               {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+              <span className="text-micro ml-1">(tap to zoom out)</span>
             </p>
           </button>
           
@@ -426,13 +449,13 @@ export function ScheduleTab({
         </div>
       </GlassPanel>
 
-      {/* Premium lock for schedule editing */}
+      {/* Premium lock */}
       {!isPremium && (
         <GlassPanel className="glass-premium p-4 text-center" variant="strong">
           <Bell className="w-8 h-8 text-primary mx-auto mb-2" />
           <p className="text-title text-foreground mb-1">Unlock Full Scheduling</p>
           <p className="text-caption mb-3">
-            Set reminders, drag to reschedule, and sync with your calendar
+            Drag tasks to reschedule and sync with your calendar
           </p>
           <button 
             onClick={onUpgradeClick}
@@ -443,25 +466,30 @@ export function ScheduleTab({
         </GlassPanel>
       )}
 
-      {/* Timeline */}
+      {/* Timeline with drop zones */}
       <div className="space-y-1">
         {visibleHours.map(hour => {
-          const tasksAtHour = scheduleByHour[hour] || [];
+          const tasksAtHour = dateScheduleByHour[hour] || [];
           const isNow = isToday && hour === currentHour;
           const isPast = isToday && hour < currentHour;
+          const isDropTarget = dragOverHour === hour;
           
           return (
             <div 
               key={hour}
               className={cn(
-                "flex gap-3 min-h-[60px] transition-all duration-500",
-                isPast && "opacity-40"
+                "flex gap-3 min-h-[60px] transition-all duration-300",
+                isPast && "opacity-40",
+                isDropTarget && "scale-[1.02]"
               )}
+              onDragOver={(e) => handleDragOver(e, hour)}
+              onDrop={() => handleDrop(hour)}
             >
               {/* Time column */}
               <div className={cn(
-                "w-16 shrink-0 text-right pr-3 py-2 border-r-2 transition-all duration-500",
-                isNow ? "border-primary" : "border-border/30"
+                "w-16 shrink-0 text-right pr-3 py-2 border-r-2 transition-all duration-300",
+                isNow ? "border-primary" : "border-border/30",
+                isDropTarget && "border-primary"
               )}>
                 <span className={cn(
                   "text-micro transition-all duration-300",
@@ -476,30 +504,41 @@ export function ScheduleTab({
                 )}
               </div>
               
-              {/* Tasks column */}
-              <div className="flex-1 py-1 space-y-1">
+              {/* Tasks column - drop zone */}
+              <div className={cn(
+                "flex-1 py-1 space-y-1 rounded-xl transition-all duration-300",
+                isDropTarget && "bg-primary/10 ring-2 ring-primary/30"
+              )}>
                 {tasksAtHour.length > 0 ? (
-                  tasksAtHour.map(task => task && (
-                    <button
+                  tasksAtHour.map(task => (
+                    <div
                       key={task.id}
+                      draggable={isPremium}
+                      onDragStart={() => handleDragStart(task)}
+                      onDragEnd={handleDragEnd}
                       onClick={() => setFocusTask(task)}
                       className={cn(
-                        "w-full glass-subtle rounded-xl p-3 text-left transition-all duration-300 ios-press hover:scale-[1.02]",
-                        task.completed && "opacity-50 line-through"
+                        "w-full glass-subtle rounded-xl p-3 text-left transition-all duration-300 ios-press hover:scale-[1.02] cursor-pointer",
+                        task.completed && "opacity-50 line-through",
+                        isPremium && "cursor-grab active:cursor-grabbing"
                       )}
                     >
                       <div className="flex items-center gap-2">
+                        {isPremium && <GripVertical className="w-4 h-4 text-muted-foreground/50" />}
                         <span className="text-lg">{CATEGORY_ICONS[task.category]}</span>
-                        <span className="text-body text-foreground font-medium truncate">
+                        <span className="text-body text-foreground font-medium truncate flex-1">
                           {task.title}
                         </span>
-                        <Target className="w-4 h-4 text-primary/50 ml-auto" />
+                        <Target className="w-4 h-4 text-primary/50" />
                       </div>
-                    </button>
+                    </div>
                   ))
                 ) : (
                   <div className="h-full min-h-[40px] flex items-center">
-                    <div className="w-full border-t border-dashed border-border/20" />
+                    <div className={cn(
+                      "w-full border-t border-dashed transition-all duration-300",
+                      isDropTarget ? "border-primary" : "border-border/20"
+                    )} />
                   </div>
                 )}
               </div>
@@ -508,21 +547,29 @@ export function ScheduleTab({
         })}
       </div>
 
-      {/* Quick add unscheduled tasks */}
+      {/* Unscheduled tasks - draggable */}
       {unscheduledTasks.length > 0 && (
         <GlassPanel variant="strong">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-5 h-5 text-primary" />
             <h2 className="text-title text-foreground">Unscheduled Tasks</h2>
+            {isPremium && <span className="text-micro">(drag to schedule)</span>}
           </div>
           <div className="space-y-2">
             {unscheduledTasks.slice(0, 5).map(task => (
               <div 
                 key={task.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-all duration-300 cursor-pointer"
+                draggable={isPremium}
+                onDragStart={() => handleDragStart(task)}
+                onDragEnd={handleDragEnd}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-all duration-300",
+                  isPremium && "cursor-grab active:cursor-grabbing"
+                )}
                 onClick={() => setFocusTask(task)}
               >
                 <div className="flex items-center gap-2">
+                  {isPremium && <GripVertical className="w-4 h-4 text-muted-foreground/50" />}
                   <span>{CATEGORY_ICONS[task.category]}</span>
                   <span className="text-body text-foreground">{task.title}</span>
                 </div>
@@ -532,7 +579,8 @@ export function ScheduleTab({
                     if (isPremium) {
                       const now = new Date();
                       now.setHours(now.getHours() + 1, 0, 0, 0);
-                      onScheduleTask(task.id, now.toISOString());
+                      const dateStr = selectedDate.toISOString().split('T')[0];
+                      onScheduleTask(task.id, `${dateStr}T${now.getHours().toString().padStart(2, '0')}:00`);
                     } else {
                       onUpgradeClick();
                     }
