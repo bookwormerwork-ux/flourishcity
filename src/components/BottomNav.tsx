@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
-import { Home, CheckSquare, Calendar, Trophy, Settings, Plus } from 'lucide-react';
+import { Home, Calendar, Trophy, Settings, Plus, Swords } from 'lucide-react';
 
-type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'settings';
+type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'leaderboard' | 'settings';
 
 interface BottomNavProps {
   activeTab: TabId;
@@ -14,7 +14,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
     { id: 'city' as TabId, icon: Home, label: 'City' },
     { id: 'schedule' as TabId, icon: Calendar, label: 'Schedule' },
     { id: 'add' as TabId, icon: Plus, label: 'Add', isAction: true },
-    { id: 'achievements' as TabId, icon: Trophy, label: 'Awards' },
+    { id: 'leaderboard' as TabId, icon: Swords, label: 'Compete' },
     { id: 'settings' as TabId, icon: Settings, label: 'Settings' },
   ];
 

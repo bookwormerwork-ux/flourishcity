@@ -12,10 +12,11 @@ import { ReminderNotification } from '@/components/ReminderNotification';
 import { CityTab } from '@/components/views/CityTab';
 import { ScheduleTab } from '@/components/views/ScheduleTab';
 import { AchievementsTab } from '@/components/views/AchievementsTab';
+import { LeaderboardTab } from '@/components/views/LeaderboardTab';
 import { SettingsTab } from '@/components/views/SettingsTab';
 import { TaskCategory, TaskPriority } from '@/types/game';
 
-type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'settings';
+type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'leaderboard' | 'settings';
 type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'rainy';
 
 const Index = () => {
@@ -31,7 +32,6 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
 
-  // Check achievements when stats change
   useEffect(() => {
     checkAchievements();
   }, [cityStats.totalTasksCompleted, cityStats.streak, checkAchievements]);
@@ -69,7 +69,7 @@ const Index = () => {
       case 'schedule':
         return (
           <ScheduleTab
-            tasks={activeTasks}
+            tasks={tasks}
             scheduleByHour={scheduleByHour}
             onScheduleTask={scheduleTask}
             onCompleteTask={handleCompleteTask}
@@ -84,6 +84,14 @@ const Index = () => {
             unlockedCount={unlockedCount}
             totalCount={totalCount}
             isPremium={isPremium}
+          />
+        );
+      case 'leaderboard':
+        return (
+          <LeaderboardTab
+            cityStats={cityStats}
+            isPremium={isPremium}
+            onUpgradeClick={() => setShowSubscription(true)}
           />
         );
       case 'settings':
@@ -110,22 +118,24 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20 flex items-center justify-center p-4">
       {/* iPhone frame */}
       <div className="w-full max-w-[390px] h-[844px] bg-background rounded-[3rem] shadow-2xl overflow-hidden flex flex-col relative border border-border/30">
-        {/* Status bar mockup */}
-        <div className="h-12 flex items-center justify-center safe-area-pt">
+        {/* Status bar */}
+        <div className="h-12 flex items-center justify-center shrink-0">
           <div className="w-28 h-7 bg-foreground/10 rounded-full" />
         </div>
 
-        {/* Main content */}
+        {/* Main content - scrollable */}
         <main className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-hide">
           {renderActiveTab()}
         </main>
 
-        {/* Bottom navigation */}
-        <BottomNav
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onAddClick={() => setShowAddSheet(true)}
-        />
+        {/* Bottom navigation - FIXED, never scrolls */}
+        <div className="shrink-0">
+          <BottomNav
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onAddClick={() => setShowAddSheet(true)}
+          />
+        </div>
       </div>
 
       {/* Reminder notifications */}

@@ -30,15 +30,29 @@ export function useSchedule(tasks: Task[]) {
     []
   );
 
+  // Schedule a task to a specific time
   const scheduleTask = useCallback((
     taskId: string, 
     scheduledTime: string, 
     reminderEnabled: boolean = true,
     reminderMinutesBefore: number = 15
   ) => {
+    // Parse the time - could be just "HH:MM" or full datetime
+    let finalScheduledTime = scheduledTime;
+    if (!scheduledTime.includes('T')) {
+      // It's just a time, combine with today's date
+      const today = new Date();
+      finalScheduledTime = `${today.toISOString().split('T')[0]}T${scheduledTime}`;
+    }
+
     setScheduledTasks(prev => {
       const filtered = prev.filter(s => s.taskId !== taskId);
-      return [...filtered, { taskId, scheduledTime, reminderEnabled, reminderMinutesBefore }];
+      return [...filtered, { 
+        taskId, 
+        scheduledTime: finalScheduledTime, 
+        reminderEnabled, 
+        reminderMinutesBefore 
+      }];
     });
   }, [setScheduledTasks]);
 
@@ -54,22 +68,49 @@ export function useSchedule(tasks: Task[]) {
     return scheduledTasks.find(s => s.taskId === taskId);
   }, [scheduledTasks]);
 
+  // Combine tasks with their own scheduledTime + separately scheduled tasks
+  const allScheduledTasks = useMemo(() => {
+    const result: Array<Task & { fullScheduledTime: string }> = [];
+    
+    // Tasks with dueDate and scheduledTime set directly
+    tasks.forEach(task => {
+      if (task.dueDate && task.scheduledTime) {
+        result.push({
+          ...task,
+          fullScheduledTime: `${task.dueDate}T${task.scheduledTime}`
+        });
+      }
+    });
+    
+    // Tasks scheduled via the schedule system
+    scheduledTasks.forEach(scheduled => {
+      const task = tasks.find(t => t.id === scheduled.taskId);
+      if (task && !result.find(r => r.id === task.id)) {
+        result.push({
+          ...task,
+          fullScheduledTime: scheduled.scheduledTime
+        });
+      }
+    });
+    
+    return result;
+  }, [tasks, scheduledTasks]);
+
   // Get tasks scheduled for today
   const todaysSchedule = useMemo(() => {
     const today = new Date().toDateString();
     
-    return scheduledTasks
-      .filter(scheduled => {
-        const scheduleDate = new Date(scheduled.scheduledTime).toDateString();
+    return allScheduledTasks
+      .filter(task => {
+        const scheduleDate = new Date(task.fullScheduledTime).toDateString();
         return scheduleDate === today;
       })
-      .map(scheduled => {
-        const task = tasks.find(t => t.id === scheduled.taskId);
-        return task ? { ...task, scheduledTime: scheduled.scheduledTime, reminderEnabled: scheduled.reminderEnabled } : null;
-      })
-      .filter(Boolean)
-      .sort((a, b) => new Date(a!.scheduledTime!).getTime() - new Date(b!.scheduledTime!).getTime());
-  }, [scheduledTasks, tasks]);
+      .map(task => ({
+        ...task,
+        scheduledTime: task.fullScheduledTime
+      }))
+      .sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+  }, [allScheduledTasks]);
 
   // Get active reminders
   const activeReminders = useMemo((): Reminder[] => {
@@ -85,7 +126,6 @@ export function useSchedule(tasks: Task[]) {
         const scheduledTime = new Date(scheduled.scheduledTime);
         const reminderTime = new Date(scheduledTime.getTime() - scheduled.reminderMinutesBefore * 60000);
         
-        // Show reminder if it's time and not dismissed
         const reminderId = `${scheduled.taskId}-${scheduled.scheduledTime}`;
         if (dismissedReminders.includes(reminderId)) return false;
         
@@ -117,7 +157,7 @@ export function useSchedule(tasks: Task[]) {
     
     todaysSchedule.forEach(task => {
       if (task) {
-        const hour = new Date(task.scheduledTime!).getHours();
+        const hour = new Date(task.scheduledTime).getHours();
         hours[hour].push(task);
       }
     });
@@ -127,6 +167,7 @@ export function useSchedule(tasks: Task[]) {
 
   return {
     scheduledTasks,
+    allScheduledTasks,
     todaysSchedule,
     activeReminders,
     scheduleByHour,
