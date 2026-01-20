@@ -8,93 +8,93 @@
 
 @layer base {
   :root {
-    /* Light mode - Soft, airy, glass-like */
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    /* Light mode - Soft Beige Palette */
+    --background: 27 38% 92%;
+    --foreground: 25 25% 18%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card: 54 36% 93%;
+    --card-foreground: 25 25% 18%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover: 54 36% 95%;
+    --popover-foreground: 25 25% 18%;
 
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 13 35% 65%;
+    --primary-foreground: 25 20% 98%;
 
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 25% 20%;
+    --secondary: 44 37% 88%;
+    --secondary-foreground: 25 30% 25%;
 
-    --muted: 220 15% 85%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 34 30% 82%;
+    --muted-foreground: 25 20% 45%;
 
-    --accent: 220 20% 96%;
-    --accent-foreground: 220 25% 15%;
+    --accent: 34 40% 86%;
+    --accent-foreground: 25 30% 20%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 210 100% 50%;
+    --border: 34 25% 82%;
+    --input: 34 25% 85%;
+    --ring: 13 35% 60%;
 
     --radius: 1.25rem;
 
-    /* Glass effect tokens - iOS 26 style */
-    --glass: 0 0% 100%;
-    --glass-border: 0 0% 100%;
+    /* Glass effect tokens - Warm beige style */
+    --glass: 44 37% 95%;
+    --glass-border: 34 30% 88%;
     --glass-blur: 40px;
     
     /* Premium glass */
-    --glass-premium: 210 100% 98%;
-    --glass-premium-border: 210 100% 90%;
+    --glass-premium: 13 35% 92%;
+    --glass-premium-border: 13 40% 78%;
     
     /* Overlay blur */
-    --overlay: 220 25% 10%;
+    --overlay: 25 25% 18%;
     
-    /* Category colors - Vibrant but soft */
-    --study: 280 80% 60%;
-    --work: 210 100% 55%;
-    --habits: 150 70% 45%;
-    --personal: 40 95% 55%;
+    /* Category colors - Warm tones */
+    --study: 280 50% 55%;
+    --work: 200 60% 50%;
+    --habits: 150 55% 42%;
+    --personal: 35 80% 55%;
     
     /* City theme */
-    --sky-day: 200 90% 75%;
-    --sky-sunset: 25 95% 65%;
-    --sky-night: 230 50% 20%;
-    --grass: 145 50% 50%;
-    --building: 220 25% 88%;
+    --sky-day: 200 70% 75%;
+    --sky-sunset: 25 85% 65%;
+    --sky-night: 230 40% 22%;
+    --grass: 145 45% 48%;
+    --building: 34 35% 85%;
     
     /* Achievement colors */
-    --gold: 45 100% 50%;
-    --silver: 210 10% 70%;
-    --bronze: 25 60% 50%;
+    --gold: 42 90% 52%;
+    --silver: 200 10% 68%;
+    --bronze: 25 55% 48%;
     
     /* Success color */
-    --success: 150 70% 45%;
+    --success: 150 55% 42%;
     --success-foreground: 0 0% 100%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 25% 10%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 92%;
-    --sidebar-accent-foreground: 220 25% 20%;
-    --sidebar-border: 220 15% 90%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-background: 27 38% 94%;
+    --sidebar-foreground: 25 25% 18%;
+    --sidebar-primary: 13 35% 65%;
+    --sidebar-primary-foreground: 25 20% 98%;
+    --sidebar-accent: 44 37% 88%;
+    --sidebar-accent-foreground: 25 30% 25%;
+    --sidebar-border: 34 25% 82%;
+    --sidebar-ring: 13 35% 60%;
 
-    --chart-1: 210 100% 55%;
-    --chart-2: 280 80% 60%;
-    --chart-3: 150 70% 45%;
-    --chart-4: 40 95% 55%;
-    --chart-5: 0 72% 51%;
-    --sidebar: 0 0% 100%;
+    --chart-1: 13 35% 65%;
+    --chart-2: 280 50% 55%;
+    --chart-3: 150 55% 42%;
+    --chart-4: 35 80% 55%;
+    --chart-5: 0 60% 50%;
+    --sidebar: 54 36% 95%;
 
     --font-sans: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     
-    --shadow-glass: 0 8px 32px -4px hsl(210 100% 50% / 0.08), 0 4px 16px -2px hsl(0 0% 0% / 0.04);
-    --shadow-glass-hover: 0 12px 40px -4px hsl(210 100% 50% / 0.12), 0 8px 24px -4px hsl(0 0% 0% / 0.06);
-    --shadow-glow: 0 0 40px hsl(210 100% 50% / 0.15);
-    --shadow-premium: 0 20px 60px -12px hsl(210 100% 50% / 0.25);
+    --shadow-glass: 0 8px 32px -4px hsl(13 35% 65% / 0.1), 0 4px 16px -2px hsl(25 25% 18% / 0.04);
+    --shadow-glass-hover: 0 12px 40px -4px hsl(13 35% 65% / 0.15), 0 8px 24px -4px hsl(25 25% 18% / 0.06);
+    --shadow-glow: 0 0 40px hsl(13 35% 65% / 0.2);
+    --shadow-premium: 0 20px 60px -12px hsl(13 35% 65% / 0.25);
     
     --tracking-normal: -0.01em;
     --spacing: 0.25rem;
