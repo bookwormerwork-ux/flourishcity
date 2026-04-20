@@ -1,8 +1,10 @@
 import { GlassPanel } from '@/components/GlassPanel';
 import { CityStats } from '@/types/game';
-import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, Smartphone } from 'lucide-react';
+import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, Smartphone, LogIn, LogOut, UserIcon } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import type { DeviceFrame, DeviceFrameId } from '@/hooks/useDeviceFrame';
 
 interface SettingsTabProps {
@@ -41,6 +43,8 @@ export function SettingsTab({
   const [devPassword, setDevPassword] = useState('');
   const [devError, setDevError] = useState(false);
   const [devSuccess, setDevSuccess] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleExport = () => {
     const data = {
