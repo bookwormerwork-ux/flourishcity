@@ -189,7 +189,7 @@ export function DetailedCityView({
   // Non-premium teaser
   if (!isPremium) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background animate-fade-in">
+      <div className="absolute inset-0 z-[100] flex items-center justify-center bg-background animate-fade-in">
         <div className="glass-ultra rounded-[2rem] p-8 max-w-sm text-center animate-scale-in mx-4">
           <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 animate-breathe">
             <Lock className="w-10 h-10 text-primary" />
@@ -226,7 +226,7 @@ export function DetailedCityView({
   const citizenCount = citizens.length || 1;
 
   return (
-    <div className="fixed inset-0 z-[100] animate-fade-in overflow-hidden">
+    <div className="absolute inset-0 z-[100] animate-fade-in overflow-hidden">
       {/* Full sky background - SOLID, no blur */}
       <div className={cn(
         "absolute inset-0",
@@ -415,10 +415,10 @@ export function DetailedCityView({
       {showPeopleStats && (
         <>
           <div 
-            className="fixed inset-0 z-[110] bg-black/50"
+            className="absolute inset-0 z-[110] bg-black/50"
             onClick={() => setShowPeopleStats(false)}
           />
-          <div className="fixed inset-x-4 top-16 bottom-16 z-[120] flex items-center justify-center animate-scale-in">
+          <div className="absolute inset-x-4 top-16 bottom-16 z-[120] flex items-center justify-center animate-scale-in">
             <div className="glass-ultra rounded-[2rem] p-6 max-w-sm w-full max-h-full overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-headline text-foreground flex items-center gap-2">
