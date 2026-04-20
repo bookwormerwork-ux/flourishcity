@@ -149,6 +149,41 @@ export function SettingsTab({
         </div>
       </GlassPanel>
 
+      {/* Device frame selector */}
+      {frames && onFrameChange && (
+        <GlassPanel variant="strong">
+          <div className="flex items-center gap-2 mb-3">
+            <Smartphone className="w-5 h-5 text-primary" />
+            <h3 className="text-title text-foreground">Device Frame</h3>
+          </div>
+          <p className="text-caption mb-3">Preview Flourish at different screen sizes</p>
+          <div className="grid grid-cols-2 gap-2">
+            {frames.map(f => (
+              <button
+                key={f.id}
+                onClick={() => onFrameChange(f.id)}
+                className={cn(
+                  "flex flex-col items-start gap-0.5 p-3 rounded-2xl transition-all duration-300 ios-press text-left",
+                  frameId === f.id
+                    ? "bg-primary/10 border-2 border-primary"
+                    : "bg-accent/30 border-2 border-transparent hover:bg-accent/50"
+                )}
+              >
+                <span className={cn(
+                  "text-sm font-semibold",
+                  frameId === f.id ? "text-primary" : "text-foreground"
+                )}>
+                  {f.label}
+                </span>
+                <span className="text-micro">
+                  {f.id === 'fit' ? 'Full screen' : `${f.width} × ${f.height}`}
+                </span>
+              </button>
+            ))}
+          </div>
+        </GlassPanel>
+      )}
+
       {/* About */}
       <GlassPanel variant="strong">
         <div className="flex items-center gap-3 mb-3">
