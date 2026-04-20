@@ -1,8 +1,10 @@
 import { GlassPanel } from '@/components/GlassPanel';
 import { CityStats } from '@/types/game';
-import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, Smartphone } from 'lucide-react';
+import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, Smartphone, LogIn, LogOut, UserIcon } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import type { DeviceFrame, DeviceFrameId } from '@/hooks/useDeviceFrame';
 
 interface SettingsTabProps {
@@ -41,6 +43,8 @@ export function SettingsTab({
   const [devPassword, setDevPassword] = useState('');
   const [devError, setDevError] = useState(false);
   const [devSuccess, setDevSuccess] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleExport = () => {
     const data = {
@@ -114,6 +118,30 @@ export function SettingsTab({
           {!isPremium && (
             <button onClick={onUpgradeClick} className="pill-primary text-sm transition-all duration-300 hover:scale-[1.02]">
               Upgrade
+            </button>
+          )}
+        </div>
+      </GlassPanel>
+
+      {/* Account */}
+      <GlassPanel variant="strong">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <UserIcon className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-title text-foreground">Account</h2>
+            <p className="text-caption truncate">
+              {user ? user.email ?? 'Signed in' : 'Sign in to join the online leaderboard'}
+            </p>
+          </div>
+          {user ? (
+            <button onClick={signOut} className="pill-secondary text-xs flex items-center gap-1">
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
+          ) : (
+            <button onClick={() => navigate('/auth')} className="pill-primary text-xs flex items-center gap-1">
+              <LogIn className="w-3.5 h-3.5" /> Sign in
             </button>
           )}
         </div>

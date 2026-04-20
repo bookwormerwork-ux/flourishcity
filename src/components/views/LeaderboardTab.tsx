@@ -1,7 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GlassPanel } from '@/components/GlassPanel';
 import { CityStats } from '@/types/game';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { useLeaderboard, useSyncMyScore } from '@/hooks/useLeaderboard';
 import { 
   Trophy, 
   Crown, 
@@ -56,15 +59,40 @@ const MOCK_LEADERBOARD: LeaderboardPlayer[] = [
 
 export function LeaderboardTab({ cityStats, isPremium, onUpgradeClick }: LeaderboardTabProps) {
   const [activeSection, setActiveSection] = useState<'leaderboard' | 'challenges'>('leaderboard');
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { rows: onlineRows } = useLeaderboard();
 
   const yourXP = cityStats.totalTasksCompleted * 10;
-  const yourRank = Math.max(1, 1000 - cityStats.totalTasksCompleted * 5);
 
-  const leaderboard = useMemo(() => {
-    return MOCK_LEADERBOARD.map(p => 
+  // Sync my score to backend when signed in
+  useSyncMyScore(yourXP, cityStats.streak, cityStats.totalTasksCompleted);
+
+  const leaderboard = useMemo<LeaderboardPlayer[]>(() => {
+    // If we have online data, use it
+    if (onlineRows.length > 0) {
+      const mapped = onlineRows.map((r, i) => ({
+        id: i + 1,
+        name: r.display_name,
+        xp: r.xp,
+        streak: r.streak,
+        rank: i + 1,
+        avatar: r.avatar,
+        isYou: user?.id === r.user_id,
+      }));
+      // Ensure "You" appears even if not synced yet
+      if (user && !mapped.some(m => m.isYou)) {
+        mapped.push({ id: 9999, name: 'You', xp: yourXP, streak: cityStats.streak, rank: mapped.length + 1, avatar: '⭐', isYou: true });
+      }
+      return mapped.sort((a, b) => b.xp - a.xp).map((p, i) => ({ ...p, rank: i + 1 }));
+    }
+    // Fallback mock when not signed in / no data
+    return MOCK_LEADERBOARD.map(p =>
       p.isYou ? { ...p, xp: yourXP, streak: cityStats.streak } : p
     ).sort((a, b) => b.xp - a.xp).map((p, i) => ({ ...p, rank: i + 1 }));
-  }, [yourXP, cityStats.streak]);
+  }, [yourXP, cityStats.streak, onlineRows, user]);
+
+  const yourRank = leaderboard.find(p => p.isYou)?.rank ?? leaderboard.length + 1;
 
   const league = useMemo(() => {
     if (cityStats.totalTasksCompleted >= 100) return { name: 'Diamond', color: 'text-blue-400', bg: 'bg-blue-500/20' };
