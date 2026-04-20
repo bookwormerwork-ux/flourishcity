@@ -123,6 +123,30 @@ export function SettingsTab({
         </div>
       </GlassPanel>
 
+      {/* Account */}
+      <GlassPanel variant="strong">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <UserIcon className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-title text-foreground">Account</h2>
+            <p className="text-caption truncate">
+              {user ? user.email ?? 'Signed in' : 'Sign in to join the online leaderboard'}
+            </p>
+          </div>
+          {user ? (
+            <button onClick={signOut} className="pill-secondary text-xs flex items-center gap-1">
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
+          ) : (
+            <button onClick={() => navigate('/auth')} className="pill-primary text-xs flex items-center gap-1">
+              <LogIn className="w-3.5 h-3.5" /> Sign in
+            </button>
+          )}
+        </div>
+      </GlassPanel>
+
       {/* Theme selector */}
       <GlassPanel variant="strong">
         <h3 className="text-title text-foreground mb-3">Appearance</h3>
