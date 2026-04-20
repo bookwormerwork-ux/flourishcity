@@ -16,19 +16,25 @@ interface SettingsTabProps {
   onUpgradeClick: () => void;
   onActivateDeveloper: (password: string) => boolean;
   onDeactivateDeveloper: () => void;
+  frameId?: DeviceFrameId;
+  onFrameChange?: (id: DeviceFrameId) => void;
+  frames?: DeviceFrame[];
 }
 
-export function SettingsTab({ 
-  cityStats, 
-  onResetData, 
-  theme, 
-  onThemeChange, 
-  isPremium, 
+export function SettingsTab({
+  cityStats,
+  onResetData,
+  theme,
+  onThemeChange,
+  isPremium,
   isDeveloper,
-  plan, 
+  plan,
   onUpgradeClick,
   onActivateDeveloper,
-  onDeactivateDeveloper
+  onDeactivateDeveloper,
+  frameId,
+  onFrameChange,
+  frames
 }: SettingsTabProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showDevPanel, setShowDevPanel] = useState(false);
