@@ -1,8 +1,9 @@
 import { GlassPanel } from '@/components/GlassPanel';
 import { CityStats } from '@/types/game';
-import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check } from 'lucide-react';
+import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import type { DeviceFrame, DeviceFrameId } from '@/hooks/useDeviceFrame';
 
 interface SettingsTabProps {
   cityStats: CityStats;
