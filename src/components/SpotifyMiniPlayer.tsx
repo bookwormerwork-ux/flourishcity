@@ -1,7 +1,7 @@
 import { Play, Pause, SkipBack, SkipForward, Music, LogIn, AlertCircle, Heart, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
-import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
+import { useSpotifyPlayerCtx } from '@/hooks/useSpotifyPlayerContext';
 import { GlassPanel } from './GlassPanel';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +22,7 @@ interface SpotifyPlayerCardProps {
 
 export function SpotifyPlayerCard({ variant = 'full', autoplay = false }: SpotifyPlayerCardProps) {
   const { isConnected, beginLogin, loading, logout, getAccessToken } = useSpotifyAuth();
-  const { state, togglePlay, next, previous, transferAndPlay } = useSpotifyPlayer();
+  const { state, togglePlay, next, previous, transferAndPlay } = useSpotifyPlayerCtx();
 
   const [liked, setLiked] = useState<LikedTrack[]>([]);
   const [likedLoading, setLikedLoading] = useState(false);

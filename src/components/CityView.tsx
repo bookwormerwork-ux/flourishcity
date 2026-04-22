@@ -1,6 +1,7 @@
 import { CityStats } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Sun, Cloud, CloudRain, Sparkles, Users, Maximize2 } from 'lucide-react';
+import { GlassyBuildings } from './GlassyBuildings';
 
 interface CityViewProps {
   stats: CityStats;
@@ -63,29 +64,9 @@ export function CityView({ stats, weather, onCelebrate, onZoomClick }: CityViewP
       {/* Ground */}
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-city-grass/70 to-city-grass/20" />
 
-      {/* Buildings */}
-      <div className="absolute bottom-12 left-0 right-0 flex justify-center items-end gap-2 px-4">
-        {stats.buildings.slice(0, 8).map((building, index) => (
-          <div
-            key={building.id}
-            className={cn(
-              "flex flex-col items-center transition-all duration-500 animate-fade-in",
-              onCelebrate && "animate-bounce-gentle"
-            )}
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="glass-subtle rounded-xl p-2 hover:scale-110 transition-transform cursor-pointer">
-              <span className="text-2xl">
-                {building.type === 'house' && '🏠'}
-                {building.type === 'school' && '🏫'}
-                {building.type === 'office' && '🏢'}
-                {building.type === 'gym' && '🏋️'}
-                {building.type === 'park' && '🌳'}
-                {building.type === 'tower' && '🏙️'}
-              </span>
-            </div>
-          </div>
-        ))}
+      {/* Buildings — clean glassy skyline */}
+      <div className="absolute bottom-10 left-0 right-0">
+        <GlassyBuildings buildings={stats.buildings} max={14} scale="sm" />
       </div>
 
       {/* Stats overlay */}

@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { CityStats, Task, CATEGORY_ICONS } from '@/types/game';
 import { cn } from '@/lib/utils';
-import { 
-  X, 
-  Lock, 
-  User, 
-  Smile, 
-  Frown, 
-  Meh, 
-  Heart, 
-  Star, 
+import { GlassyBuildings } from './GlassyBuildings';
+import {
+  X,
+  Lock,
+  User,
+  Smile,
+  Frown,
+  Meh,
+  Heart,
+  Star,
   Sparkles,
   Users,
   TrendingUp,
@@ -283,32 +284,9 @@ export function DetailedCityView({
       {/* Ground */}
       <div className="absolute bottom-0 left-0 right-0 h-[35%] bg-gradient-to-t from-[#228B22] via-[#32CD32]/80 to-transparent" />
 
-      {/* Buildings */}
-      <div className="absolute bottom-[32%] left-0 right-0 flex justify-center items-end gap-2 px-2">
-        {stats.buildings.slice(0, 6).map((building, i) => (
-          <div 
-            key={building.id}
-            className="flex flex-col items-center animate-fade-in"
-            style={{ animationDelay: `${i * 0.1}s` }}
-          >
-            <div className={cn(
-              "glass rounded-xl p-2 transition-all duration-500 hover:scale-105",
-              building.type === 'tower' && "p-3"
-            )}>
-              <div className={cn(
-                "flex items-center justify-center",
-                building.type === 'tower' ? "w-8 h-8" : "w-6 h-6"
-              )}>
-                {building.type === 'house' && <User className="w-full h-full text-foreground/70" />}
-                {building.type === 'school' && <Star className="w-full h-full text-category-study" />}
-                {building.type === 'office' && <Sparkles className="w-full h-full text-category-work" />}
-                {building.type === 'gym' && <Heart className="w-full h-full text-category-habits" />}
-                {building.type === 'park' && <Smile className="w-full h-full text-success" />}
-                {building.type === 'tower' && <Star className="w-full h-full text-achievement-gold" />}
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Buildings — full glassy skyline */}
+      <div className="absolute bottom-[30%] left-0 right-0">
+        <GlassyBuildings buildings={stats.buildings} max={30} scale="md" />
       </div>
 
       {/* Floating mood icons */}
