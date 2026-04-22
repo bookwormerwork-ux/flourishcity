@@ -12,6 +12,8 @@ const SCOPES = [
   "user-read-playback-state",
   "user-modify-playback-state",
   "user-read-currently-playing",
+  "user-library-read",
+  "playlist-read-private",
 ].join(" ");
 
 Deno.serve(async (req) => {
