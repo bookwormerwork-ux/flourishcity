@@ -3,6 +3,7 @@ import { HappinessMeter } from '@/components/HappinessMeter';
 import { MotivationalQuote } from '@/components/MotivationalQuote';
 import { TaskCard } from '@/components/TaskCard';
 import { GlassPanel } from '@/components/GlassPanel';
+import { SpotifyPlayerCard } from '@/components/SpotifyMiniPlayer';
 import { CityStats, Task } from '@/types/game';
 import { Target } from 'lucide-react';
 
@@ -47,6 +48,9 @@ export function CityTab({
 
       {/* Motivational Quote */}
       <MotivationalQuote />
+
+      {/* Spotify lofi player — autoplay on first ready */}
+      <SpotifyPlayerCard variant="full" autoplay />
 
       {/* Today's Focus */}
       {activeTodayTasks.length > 0 && (
