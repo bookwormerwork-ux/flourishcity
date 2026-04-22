@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { SpotifyMiniPlayer } from '@/components/SpotifyMiniPlayer';
+import { SpotifyPlayerCard } from '@/components/SpotifyMiniPlayer';
 import type { DeviceFrame, DeviceFrameId } from '@/hooks/useDeviceFrame';
 
 interface SettingsTabProps {
@@ -149,7 +149,7 @@ export function SettingsTab({
       </GlassPanel>
 
       {/* Spotify */}
-      <SpotifyMiniPlayer />
+      <SpotifyPlayerCard variant="full" />
 
       {/* Theme selector */}
       <GlassPanel variant="strong">
