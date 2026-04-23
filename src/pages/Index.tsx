@@ -15,7 +15,11 @@ import { ScheduleTab } from '@/components/views/ScheduleTab';
 import { AchievementsTab } from '@/components/views/AchievementsTab';
 import { LeaderboardTab } from '@/components/views/LeaderboardTab';
 import { SettingsTab } from '@/components/views/SettingsTab';
-import { TaskCategory, TaskPriority } from '@/types/game';
+import { VerifyTaskModal } from '@/components/VerifyTaskModal';
+import { CouncilReportModal } from '@/components/CouncilReportModal';
+import { TaskCategory, TaskPriority, TaskDifficulty, Task } from '@/types/game';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'leaderboard' | 'settings';
 type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'rainy';
@@ -27,14 +31,33 @@ const Index = () => {
   const [showDetailedCity, setShowDetailedCity] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
 
-  const { tasks, activeTasks, todaysTasks, cityStats, weather, addTask, completeTask, deleteTask } = useGameState();
+  const [verifyingTask, setVerifyingTask] = useState<Task | null>(null);
+  const beforePhotosRef = useRef<Record<string, string>>({});
+
+  const [councilText, setCouncilText] = useState<string | null>(null);
+
+  const {
+    tasks,
+    activeTasks,
+    debtTasks,
+    todaysTasks,
+    cityStats,
+    weather,
+    addTask,
+    completeTask,
+    deleteTask,
+    isCategoryOnCooldown,
+    addCitizenDemand,
+    dismissCitizenDemand,
+    addCouncilReport,
+    acknowledgeCrisis,
+  } = useGameState();
   const { isPremium, plan, isDeveloper, subscribe, activateDeveloperMode, deactivateDeveloperMode } = usePremium();
   const { achievements, unlockedCount, totalCount, checkAchievements } = useAchievements(cityStats, tasks);
   const { theme, setTheme } = useTheme();
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
   const { frame, frameId, setFrameId, frames } = useDeviceFrame();
 
-  // Auto-fit scaling for the phone frame
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [autoFit, setAutoFit] = useState(false);
@@ -62,21 +85,136 @@ const Index = () => {
     checkAchievements();
   }, [cityStats.totalTasksCompleted, cityStats.streak, checkAchievements]);
 
-  const handleAddTask = useCallback((
-    title: string,
-    category: TaskCategory,
-    priority: TaskPriority,
-    scheduledDate?: string,
-    scheduledTime?: string
-  ) => {
-    addTask(title, category, priority, scheduledDate, scheduledTime);
-  }, [addTask]);
+  const debtsWarnedRef = useRef(false);
+  useEffect(() => {
+    if (debtTasks.length >= 5 && !debtsWarnedRef.current) {
+      debtsWarnedRef.current = true;
+      toast({
+        title: 'Faith is wavering',
+        description: 'The scaffolding is overwhelming your skyline. Your people are losing faith.',
+      });
+    }
+    if (debtTasks.length < 5) debtsWarnedRef.current = false;
+  }, [debtTasks.length]);
 
-  const handleCompleteTask = useCallback((id: string) => {
-    completeTask(id);
+  // Council report — fire once per mount if 7+ days have passed
+  useEffect(() => {
+    const last = cityStats.lastCouncilReportAt
+      ? new Date(cityStats.lastCouncilReportAt).getTime()
+      : 0;
+    const sevenDays = 7 * 24 * 3600 * 1000;
+    if (Date.now() - last < sevenDays) return;
+    if (cityStats.totalTasksCompleted < 1) return;
+
+    const completedThisWeek = tasks.filter(
+      (t) => t.completed && t.completedAt && Date.now() - new Date(t.completedAt).getTime() < sevenDays,
+    );
+    const abandoned = tasks.filter((t) => t.status === 'abandoned').length;
+    const hardest =
+      completedThisWeek.find((t) => t.difficulty === 'hard')?.title ||
+      completedThisWeek[0]?.title ||
+      'a small step';
+
+    supabase.functions
+      .invoke('council-report', {
+        body: {
+          cityName: cityStats.cityName || 'Flourish',
+          tasksCompleted: completedThisWeek.length,
+          tasksAbandoned: abandoned,
+          population: cityStats.population,
+          happiness: cityStats.happiness,
+          hardestTask: hardest,
+          debts: debtTasks.length,
+        },
+      })
+      .then(({ data, error }) => {
+        if (error || !data?.text) return;
+        setCouncilText(data.text);
+        addCouncilReport(data.text);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Citizen demand every 3 completions
+  const lastDemandAtRef = useRef(cityStats.totalTasksCompleted);
+  useEffect(() => {
+    if (cityStats.totalTasksCompleted === 0) return;
+    if (cityStats.totalTasksCompleted % 3 !== 0) return;
+    if (cityStats.totalTasksCompleted === lastDemandAtRef.current) return;
+    lastDemandAtRef.current = cityStats.totalTasksCompleted;
+
+    const recent = tasks
+      .filter((t) => t.completed)
+      .slice(0, 3)
+      .map((t) => ({ title: t.title, category: t.category }));
+
+    supabase.functions
+      .invoke('citizen-demand', { body: { recentTasks: recent } })
+      .then(({ data, error }) => {
+        if (error || !data?.text) return;
+        addCitizenDemand(data.text);
+      });
+  }, [cityStats.totalTasksCompleted, tasks, addCitizenDemand]);
+
+  const [crisisOpen, setCrisisOpen] = useState(false);
+  useEffect(() => {
+    if (cityStats.happiness === 0 && !cityStats.decayShownCrisis) {
+      setCrisisOpen(true);
+    }
+  }, [cityStats.happiness, cityStats.decayShownCrisis]);
+
+  const handleAddTask = useCallback(
+    (
+      title: string,
+      category: TaskCategory,
+      priority: TaskPriority,
+      scheduledDate: string | undefined,
+      scheduledTime: string | undefined,
+      opts: {
+        estimatedDurationMinutes: number;
+        difficulty: TaskDifficulty;
+        isBigProject: boolean;
+        bigProjectTotalSessions?: number;
+        beforePhoto?: string;
+      },
+    ) => {
+      const t = addTask(title, category, priority, scheduledDate, scheduledTime, {
+        estimatedDurationMinutes: opts.estimatedDurationMinutes,
+        difficulty: opts.difficulty,
+        isBigProject: opts.isBigProject,
+        bigProjectTotalSessions: opts.bigProjectTotalSessions,
+        startNow: true,
+      });
+      if (opts.beforePhoto) {
+        beforePhotosRef.current[t.id] = opts.beforePhoto;
+      }
+    },
+    [addTask],
+  );
+
+  const handleCompleteTask = useCallback(
+    (id: string) => {
+      const t = tasks.find((x) => x.id === id);
+      if (!t) return;
+      if (t.estimatedDurationMinutes) {
+        setVerifyingTask(t);
+      } else {
+        completeTask(id);
+        setCelebrating(true);
+        setTimeout(() => setCelebrating(false), 700);
+      }
+    },
+    [tasks, completeTask],
+  );
+
+  const handleVerified = useCallback(() => {
+    if (!verifyingTask) return;
+    completeTask(verifyingTask.id);
+    delete beforePhotosRef.current[verifyingTask.id];
+    setVerifyingTask(null);
     setCelebrating(true);
-    setTimeout(() => setCelebrating(false), 700);
-  }, [completeTask]);
+    setTimeout(() => setCelebrating(false), 1200);
+  }, [verifyingTask, completeTask]);
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -86,8 +224,10 @@ const Index = () => {
             cityStats={cityStats}
             weather={weather as WeatherType}
             todaysTasks={todaysTasks}
+            debtTasks={debtTasks}
             onCompleteTask={handleCompleteTask}
             onDeleteTask={deleteTask}
+            onDismissDemand={dismissCitizenDemand}
             celebrating={celebrating}
             onZoomClick={() => setShowDetailedCity(true)}
           />
@@ -143,19 +283,23 @@ const Index = () => {
     }
   };
 
-  // The actual phone content
   const phoneContent = (
     <>
-      {/* Status bar */}
       <div className="h-12 flex items-center justify-center shrink-0">
         <div className="w-28 h-7 bg-foreground/10 rounded-full" />
       </div>
 
-      {/* Main content - scrollable */}
+      {cityStats.happiness < 30 && cityStats.happiness > 0 && (
+        <div className="px-5">
+          <div className="glass-strong rounded-2xl px-4 py-2 text-sm text-destructive border border-destructive/30 text-center">
+            ⚠️ Your citizens are struggling. They need you.
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-hide relative">
         {renderActiveTab()}
 
-        {/* Detailed city view rendered INSIDE the phone frame */}
         {showDetailedCity && (
           <DetailedCityView
             isOpen={showDetailedCity}
@@ -169,7 +313,6 @@ const Index = () => {
         )}
       </main>
 
-      {/* Bottom navigation - FIXED, never scrolls */}
       <div className="shrink-0 relative z-[200]">
         <BottomNav
           activeTab={activeTab}
@@ -178,8 +321,7 @@ const Index = () => {
         />
       </div>
 
-      {/* Sheets and reminders inside the frame so they stay clipped */}
-      {activeReminders.map(reminder => (
+      {activeReminders.map((reminder) => (
         <ReminderNotification
           key={reminder.id}
           reminder={reminder}
@@ -192,6 +334,7 @@ const Index = () => {
         isOpen={showAddSheet}
         onClose={() => setShowAddSheet(false)}
         onAdd={handleAddTask}
+        isCategoryOnCooldown={isCategoryOnCooldown}
       />
       <SubscriptionSheet
         isOpen={showSubscription}
@@ -199,10 +342,41 @@ const Index = () => {
         onSubscribe={subscribe}
         currentPlan={plan}
       />
+
+      {verifyingTask && (
+        <VerifyTaskModal
+          task={verifyingTask}
+          beforePhoto={beforePhotosRef.current[verifyingTask.id]}
+          onClose={() => setVerifyingTask(null)}
+          onVerified={handleVerified}
+        />
+      )}
+
+      {councilText && (
+        <CouncilReportModal text={councilText} onDismiss={() => setCouncilText(null)} />
+      )}
+
+      {crisisOpen && (
+        <>
+          <div className="fixed inset-0 overlay-blur-strong z-[140]" />
+          <div className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-[150] max-w-md mx-auto">
+            <div className="glass-ultra rounded-[1.75rem] p-6 text-center">
+              <div className="text-5xl mb-3">🌧️</div>
+              <h2 className="text-headline mb-2 text-foreground">Flourish is in crisis</h2>
+              <p className="text-caption mb-5">Your city has been abandoned.</p>
+              <button
+                onClick={() => { acknowledgeCrisis(); setCrisisOpen(false); }}
+                className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold"
+              >
+                I'm back — let's rebuild.
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 
-  // Auto-fit mode: phone fills the whole screen
   if (autoFit) {
     return (
       <div className="min-h-screen bg-background flex flex-col overflow-hidden">
@@ -211,7 +385,6 @@ const Index = () => {
     );
   }
 
-  // Framed mode: scale to fit viewport
   return (
     <div
       ref={wrapperRef}
