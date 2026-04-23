@@ -82,11 +82,19 @@ interface ShapeProps {
 function BuildingShape({ building, unit, index, onClick }: ShapeProps) {
   const dims = getDims(building.type, unit);
   const accent = `hsl(var(--${categoryToken(building.category)}))`;
+  const state = building.state || 'completed';
+
+  // Debt and Big Project use wireframe outlines instead of full color
+  const isWireframe = state === 'debt' || state === 'big_project';
+  const wireColor = state === 'debt' ? 'hsl(0 70% 55%)' : 'hsl(210 80% 60%)';
 
   return (
     <button
       onClick={onClick}
-      className="group relative shrink-0 ios-press animate-fade-in"
+      className={cn(
+        'group relative shrink-0 ios-press animate-fade-in',
+        state === 'big_project' && 'animate-pulse',
+      )}
       style={{
         width: dims.w,
         height: dims.h,
@@ -94,66 +102,85 @@ function BuildingShape({ building, unit, index, onClick }: ShapeProps) {
       }}
       aria-label={building.meta.name}
     >
-      {/* Soft glow under building */}
       <span
-        className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full blur-md opacity-50 transition-opacity group-hover:opacity-80"
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full blur-md opacity-50 group-hover:opacity-80 transition-opacity"
         style={{
           width: dims.w * 0.9,
           height: 4,
-          background: accent,
+          background: isWireframe ? wireColor : accent,
         }}
       />
 
       {/* Body */}
-      <span
-        className="absolute inset-0 rounded-[8px] border border-white/40 backdrop-blur-md transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.04]"
-        style={{
-          background: `linear-gradient(160deg,
-            hsl(var(--card) / 0.85) 0%,
-            hsl(var(--card) / 0.65) 50%,
-            ${accent.replace(')', ' / 0.25)')} 100%)`,
-          boxShadow:
-            'inset 0 1px 0 hsl(0 0% 100% / 0.45), 0 4px 12px -4px hsl(0 0% 0% / 0.18)',
-        }}
-      />
+      {isWireframe ? (
+        <span
+          className="absolute inset-0 rounded-[8px] border-2 border-dashed"
+          style={{
+            borderColor: wireColor,
+            background: `${wireColor.replace(')', ' / 0.08)')}`,
+          }}
+        />
+      ) : (
+        <span
+          className="absolute inset-0 rounded-[8px] border border-white/40 backdrop-blur-md transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-[1.04]"
+          style={{
+            background: `linear-gradient(160deg,
+              hsl(var(--card) / 0.85) 0%,
+              hsl(var(--card) / 0.65) 50%,
+              ${accent.replace(')', ' / 0.25)')} 100%)`,
+            boxShadow: 'inset 0 1px 0 hsl(0 0% 100% / 0.45), 0 4px 12px -4px hsl(0 0% 0% / 0.18)',
+          }}
+        />
+      )}
 
-      {/* Roof / top accent */}
-      {renderRoof(building.type, dims, accent)}
+      {/* Roof */}
+      {!isWireframe && renderRoof(building.type, dims, accent)}
 
-      {/* Windows grid */}
-      <span className="absolute inset-x-1 top-2 bottom-2 flex flex-col justify-around pointer-events-none">
-        {Array.from({ length: dims.windowRows }).map((_, r) => (
-          <span key={r} className="flex justify-around">
-            {Array.from({ length: dims.windowCols }).map((__, c) => {
-              const lit = (r * 3 + c + (building.id.charCodeAt(0) % 5)) % 4 !== 0;
-              return (
-                <span
-                  key={c}
-                  className="rounded-[2px] border border-white/30"
-                  style={{
-                    width: Math.max(2, unit * 0.18),
-                    height: Math.max(2, unit * 0.18),
-                    background: lit
-                      ? `linear-gradient(180deg, ${accent.replace(')', ' / 0.9)')}, ${accent.replace(')', ' / 0.55)')})`
-                      : 'hsl(var(--muted) / 0.5)',
-                    boxShadow: lit ? `0 0 4px ${accent.replace(')', ' / 0.6)')}` : 'none',
-                  }}
-                />
-              );
-            })}
-          </span>
-        ))}
-      </span>
+      {/* Windows */}
+      {!isWireframe && (
+        <span className="absolute inset-x-1 top-2 bottom-2 flex flex-col justify-around pointer-events-none">
+          {Array.from({ length: dims.windowRows }).map((_, r) => (
+            <span key={r} className="flex justify-around">
+              {Array.from({ length: dims.windowCols }).map((__, c) => {
+                const lit = (r * 3 + c + (building.id.charCodeAt(0) % 5)) % 4 !== 0;
+                return (
+                  <span
+                    key={c}
+                    className="rounded-[2px] border border-white/30"
+                    style={{
+                      width: Math.max(2, unit * 0.18),
+                      height: Math.max(2, unit * 0.18),
+                      background: lit
+                        ? `linear-gradient(180deg, ${accent.replace(')', ' / 0.9)')}, ${accent.replace(')', ' / 0.55)')})`
+                        : 'hsl(var(--muted) / 0.5)',
+                      boxShadow: lit ? `0 0 4px ${accent.replace(')', ' / 0.6)')}` : 'none',
+                    }}
+                  />
+                );
+              })}
+            </span>
+          ))}
+        </span>
+      )}
 
-      {/* Door */}
-      <span
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[3px] border border-white/30"
-        style={{
-          width: Math.max(4, unit * 0.35),
-          height: Math.max(4, unit * 0.4),
-          background: `linear-gradient(180deg, ${accent.replace(')', ' / 0.6)')}, ${accent.replace(')', ' / 0.3)')})`,
-        }}
-      />
+      {!isWireframe && (
+        <span
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[3px] border border-white/30"
+          style={{
+            width: Math.max(4, unit * 0.35),
+            height: Math.max(4, unit * 0.4),
+            background: `linear-gradient(180deg, ${accent.replace(')', ' / 0.6)')}, ${accent.replace(')', ' / 0.3)')})`,
+          }}
+        />
+      )}
+
+      {/* Neglected overlay */}
+      {state === 'neglected' && (
+        <>
+          <span className="absolute inset-0 rounded-[8px] bg-foreground/30 mix-blend-multiply pointer-events-none" />
+          <span className="absolute -top-1 -right-1 text-xs">🌿</span>
+        </>
+      )}
     </button>
   );
 }
