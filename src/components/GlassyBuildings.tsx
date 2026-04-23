@@ -164,22 +164,29 @@ function BuildingShape({ building, unit, index, onClick }: ShapeProps) {
 
 function getDims(type: Building['type'], unit: number) {
   const presets: Record<Building['type'], { w: number; h: number; windowRows: number; windowCols: number }> = {
-    house:     { w: unit * 1.5, h: unit * 1.8, windowRows: 1, windowCols: 2 },
-    apartment: { w: unit * 1.6, h: unit * 4.5, windowRows: 5, windowCols: 3 },
-    shop:      { w: unit * 1.8, h: unit * 1.6, windowRows: 1, windowCols: 3 },
-    cafe:      { w: unit * 1.5, h: unit * 1.7, windowRows: 1, windowCols: 2 },
-    office:    { w: unit * 1.7, h: unit * 4.0, windowRows: 4, windowCols: 3 },
-    school:    { w: unit * 2.4, h: unit * 2.4, windowRows: 2, windowCols: 4 },
-    library:   { w: unit * 2.0, h: unit * 2.2, windowRows: 2, windowCols: 3 },
-    gym:       { w: unit * 2.0, h: unit * 1.8, windowRows: 1, windowCols: 3 },
-    hospital:  { w: unit * 2.2, h: unit * 3.4, windowRows: 4, windowCols: 4 },
-    park:      { w: unit * 2.0, h: unit * 1.0, windowRows: 0, windowCols: 0 },
-    tower:     { w: unit * 1.4, h: unit * 6.0, windowRows: 7, windowCols: 2 },
-    town_hall: { w: unit * 2.6, h: unit * 2.6, windowRows: 2, windowCols: 4 },
-    police:    { w: unit * 1.8, h: unit * 2.2, windowRows: 2, windowCols: 3 },
-    fire:      { w: unit * 1.8, h: unit * 2.2, windowRows: 2, windowCols: 3 },
-    factory:   { w: unit * 2.6, h: unit * 2.4, windowRows: 2, windowCols: 5 },
-    statue:    { w: unit * 1.0, h: unit * 2.4, windowRows: 0, windowCols: 0 },
+    house:         { w: unit * 1.5, h: unit * 1.8, windowRows: 1, windowCols: 2 },
+    apartment:     { w: unit * 1.6, h: unit * 4.5, windowRows: 5, windowCols: 3 },
+    shop:          { w: unit * 1.8, h: unit * 1.6, windowRows: 1, windowCols: 3 },
+    cafe:          { w: unit * 1.5, h: unit * 1.7, windowRows: 1, windowCols: 2 },
+    office:        { w: unit * 1.7, h: unit * 4.0, windowRows: 4, windowCols: 3 },
+    school:        { w: unit * 2.4, h: unit * 2.4, windowRows: 2, windowCols: 4 },
+    library:       { w: unit * 2.0, h: unit * 2.2, windowRows: 2, windowCols: 3 },
+    gym:           { w: unit * 2.0, h: unit * 1.8, windowRows: 1, windowCols: 3 },
+    hospital:      { w: unit * 2.2, h: unit * 3.4, windowRows: 4, windowCols: 4 },
+    park:          { w: unit * 2.0, h: unit * 1.0, windowRows: 0, windowCols: 0 },
+    tower:         { w: unit * 1.4, h: unit * 6.0, windowRows: 7, windowCols: 2 },
+    town_hall:     { w: unit * 2.6, h: unit * 2.6, windowRows: 2, windowCols: 4 },
+    police:        { w: unit * 1.8, h: unit * 2.2, windowRows: 2, windowCols: 3 },
+    fire:          { w: unit * 1.8, h: unit * 2.2, windowRows: 2, windowCols: 3 },
+    factory:       { w: unit * 2.6, h: unit * 2.4, windowRows: 2, windowCols: 5 },
+    statue:        { w: unit * 1.0, h: unit * 2.4, windowRows: 0, windowCols: 0 },
+    studio:        { w: unit * 1.8, h: unit * 2.0, windowRows: 2, windowCols: 3 },
+    temple:        { w: unit * 2.2, h: unit * 2.4, windowRows: 1, windowCols: 3 },
+    meditation:    { w: unit * 1.8, h: unit * 1.6, windowRows: 1, windowCols: 2 },
+    bank:          { w: unit * 2.0, h: unit * 2.6, windowRows: 3, windowCols: 3 },
+    cathedral:     { w: unit * 2.6, h: unit * 4.0, windowRows: 3, windowCols: 3 },
+    stadium:       { w: unit * 3.2, h: unit * 2.2, windowRows: 1, windowCols: 5 },
+    grand_library: { w: unit * 2.8, h: unit * 3.2, windowRows: 3, windowCols: 4 },
   };
   return presets[type];
 }
@@ -261,8 +268,24 @@ function renderRoof(type: Building['type'], dims: { w: number; h: number }, acce
 }
 
 function categoryToken(c: Building['category']) {
-  // map game category to existing CSS variables in index.css
-  return c; // study | work | habits | personal are all defined as HSL vars
+  // Only legacy category vars are defined in index.css; map new ones to them.
+  switch (c) {
+    case 'study':
+    case 'growth':
+      return 'category-study';
+    case 'work':
+    case 'finance':
+      return 'category-work';
+    case 'health':
+    case 'habits':
+      return 'category-habits';
+    case 'home':
+    case 'creative':
+    case 'social':
+    case 'personal':
+    default:
+      return 'category-personal';
+  }
 }
 
 /* ------------------------------------------------------------------ */
