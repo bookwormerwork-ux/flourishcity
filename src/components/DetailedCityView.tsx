@@ -15,6 +15,10 @@ import {
   TrendingUp,
   Flame,
   Building2,
+  Target,
+  Trophy,
+  Crown,
+  Zap,
 } from 'lucide-react';
 
 interface DetailedCityViewProps {
