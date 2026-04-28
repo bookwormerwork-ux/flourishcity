@@ -41,6 +41,12 @@ const Index = () => {
 
   const [councilText, setCouncilText] = useState<string | null>(null);
 
+  // New: cinematic, postcard, mood
+  const [cinematicBuilding, setCinematicBuilding] = useState<Building | null>(null);
+  const [showPostcard, setShowPostcard] = useState(false);
+  const [showMood, setShowMood] = useState(false);
+  const [moodLastShown, setMoodLastShown] = useLocalStorage<string>('flourish-mood-last-day', '');
+
   const {
     tasks,
     activeTasks,
