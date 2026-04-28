@@ -267,6 +267,7 @@ const Index = () => {
             onDismissDemand={dismissCitizenDemand}
             celebrating={celebrating}
             onZoomClick={() => setShowDetailedCity(true)}
+            onPostcardClick={() => setShowPostcard(true)}
           />
         );
       case 'schedule':
