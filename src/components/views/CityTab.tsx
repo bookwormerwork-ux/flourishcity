@@ -58,6 +58,7 @@ export function CityTab({
           weather={weather}
           onCelebrate={celebrating}
           onZoomClick={onZoomClick}
+          onPostcardClick={onPostcardClick}
         />
         {latestDemand && (
           <CitizenDemandBubble demand={latestDemand} onDismiss={onDismissDemand} />
