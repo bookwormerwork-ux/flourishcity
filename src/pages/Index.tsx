@@ -412,6 +412,43 @@ const Index = () => {
           </div>
         </>
       )}
+
+      <BuildingCinematic
+        building={cinematicBuilding}
+        onDone={() => setCinematicBuilding(null)}
+      />
+
+      {showPostcard && (
+        <CityPostcardModal
+          stats={cityStats}
+          weeklyTasksCompleted={
+            tasks.filter(
+              (t) =>
+                t.completed &&
+                t.completedAt &&
+                Date.now() - new Date(t.completedAt).getTime() < 7 * 24 * 3600 * 1000,
+            ).length
+          }
+          onClose={() => setShowPostcard(false)}
+        />
+      )}
+
+      {showMood && (
+        <MoodCheckIn
+          onPick={(title, category, durationMinutes) => {
+            handleAddTask(title, category, 'medium', undefined, undefined, {
+              estimatedDurationMinutes: durationMinutes,
+              difficulty: 'easy',
+              isBigProject: false,
+            });
+            toast({ title: 'Added to your day', description: title });
+          }}
+          onDismiss={() => {
+            setShowMood(false);
+            setMoodLastShown(new Date().toDateString());
+          }}
+        />
+      )}
     </>
   );
 
