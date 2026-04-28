@@ -277,9 +277,14 @@ export function DetailedCityView({
       {/* Ground */}
       <div className="absolute bottom-0 left-0 right-0 h-[35%] bg-gradient-to-t from-[#228B22] via-[#32CD32]/80 to-transparent" />
 
-      {/* Buildings — full glassy skyline */}
-      <div className="absolute bottom-[30%] left-0 right-0">
-        <GlassyBuildings buildings={stats.buildings} max={30} scale="md" />
+      {/* Buildings — full glassy skyline (pinch / double-tap to zoom) */}
+      <div
+        className="absolute bottom-[30%] left-0 right-0"
+        style={{ ['--window-glow' as string]: useSkyState().windowGlow }}
+      >
+        <PinchZoom className="w-full">
+          <GlassyBuildings buildings={stats.buildings} max={30} scale="md" />
+        </PinchZoom>
       </div>
 
       {/* Floating mood icons */}
