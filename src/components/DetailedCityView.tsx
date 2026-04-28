@@ -281,7 +281,7 @@ export function DetailedCityView({
       {/* Buildings — full glassy skyline (pinch / double-tap to zoom) */}
       <div
         className="absolute bottom-[30%] left-0 right-0"
-        style={{ ['--window-glow' as string]: useSkyState().windowGlow }}
+        style={{ ['--window-glow' as string]: sky.windowGlow }}
       >
         <PinchZoom className="w-full">
           <GlassyBuildings buildings={stats.buildings} max={30} scale="md" />
