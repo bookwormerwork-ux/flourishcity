@@ -18,6 +18,7 @@ interface CityTabProps {
   onDismissDemand: (id: string) => void;
   celebrating: boolean;
   onZoomClick?: () => void;
+  onPostcardClick?: () => void;
 }
 
 export function CityTab({
@@ -30,6 +31,7 @@ export function CityTab({
   onDismissDemand,
   celebrating,
   onZoomClick,
+  onPostcardClick,
 }: CityTabProps) {
   const activeTodayTasks = todaysTasks.filter((t) => !t.completed && !t.isDebt);
   const latestDemand = (cityStats.citizenDemands || []).find((d) => !d.dismissed);
