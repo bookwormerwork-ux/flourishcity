@@ -17,9 +17,14 @@ import { LeaderboardTab } from '@/components/views/LeaderboardTab';
 import { SettingsTab } from '@/components/views/SettingsTab';
 import { VerifyTaskModal } from '@/components/VerifyTaskModal';
 import { CouncilReportModal } from '@/components/CouncilReportModal';
-import { TaskCategory, TaskPriority, TaskDifficulty, Task } from '@/types/game';
+import { BuildingCinematic } from '@/components/BuildingCinematic';
+import { CityPostcardModal } from '@/components/CityPostcardModal';
+import { MoodCheckIn } from '@/components/MoodCheckIn';
+import { TaskCategory, TaskPriority, TaskDifficulty, Task, Building } from '@/types/game';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { haptic } from '@/lib/haptics';
 
 type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'leaderboard' | 'settings';
 type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'rainy';
@@ -35,6 +40,12 @@ const Index = () => {
   const beforePhotosRef = useRef<Record<string, string>>({});
 
   const [councilText, setCouncilText] = useState<string | null>(null);
+
+  // New: cinematic, postcard, mood
+  const [cinematicBuilding, setCinematicBuilding] = useState<Building | null>(null);
+  const [showPostcard, setShowPostcard] = useState(false);
+  const [showMood, setShowMood] = useState(false);
+  const [moodLastShown, setMoodLastShown] = useLocalStorage<string>('flourish-mood-last-day', '');
 
   const {
     tasks,
@@ -57,6 +68,32 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
   const { frame, frameId, setFrameId, frames } = useDeviceFrame();
+
+  // Detect a brand-new building added to the city → cinematic + haptic
+  const lastBuildingCountRef = useRef(cityStats.buildings.length);
+  useEffect(() => {
+    const prev = lastBuildingCountRef.current;
+    const curr = cityStats.buildings.length;
+    if (curr > prev) {
+      const added = cityStats.buildings.slice(prev);
+      const newCompleted = [...added].reverse().find(
+        (b) => !b.state || b.state === 'completed',
+      );
+      if (newCompleted) {
+        setCinematicBuilding(newCompleted);
+        haptic('success');
+      }
+    }
+    lastBuildingCountRef.current = curr;
+  }, [cityStats.buildings]);
+
+  // Mood check-in: once per day, after a short delay
+  useEffect(() => {
+    const today = new Date().toDateString();
+    if (moodLastShown === today) return;
+    const t = setTimeout(() => setShowMood(true), 1500);
+    return () => clearTimeout(t);
+  }, [moodLastShown]);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -230,6 +267,7 @@ const Index = () => {
             onDismissDemand={dismissCitizenDemand}
             celebrating={celebrating}
             onZoomClick={() => setShowDetailedCity(true)}
+            onPostcardClick={() => setShowPostcard(true)}
           />
         );
       case 'schedule':
@@ -373,6 +411,43 @@ const Index = () => {
             </div>
           </div>
         </>
+      )}
+
+      <BuildingCinematic
+        building={cinematicBuilding}
+        onDone={() => setCinematicBuilding(null)}
+      />
+
+      {showPostcard && (
+        <CityPostcardModal
+          stats={cityStats}
+          weeklyTasksCompleted={
+            tasks.filter(
+              (t) =>
+                t.completed &&
+                t.completedAt &&
+                Date.now() - new Date(t.completedAt).getTime() < 7 * 24 * 3600 * 1000,
+            ).length
+          }
+          onClose={() => setShowPostcard(false)}
+        />
+      )}
+
+      {showMood && (
+        <MoodCheckIn
+          onPick={(title, category, durationMinutes) => {
+            handleAddTask(title, category, 'medium', undefined, undefined, {
+              estimatedDurationMinutes: durationMinutes,
+              difficulty: 'easy',
+              isBigProject: false,
+            });
+            toast({ title: 'Added to your day', description: title });
+          }}
+          onDismiss={() => {
+            setShowMood(false);
+            setMoodLastShown(new Date().toDateString());
+          }}
+        />
       )}
     </>
   );

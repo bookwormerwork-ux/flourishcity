@@ -143,6 +143,9 @@ function BuildingShape({ building, unit, index, onClick }: ShapeProps) {
             <span key={r} className="flex justify-around">
               {Array.from({ length: dims.windowCols }).map((__, c) => {
                 const lit = (r * 3 + c + (building.id.charCodeAt(0) % 5)) % 4 !== 0;
+                // Night-glow boost: read --window-glow from any ancestor (defaults to 0).
+                const glowBoost = `calc(var(--window-glow, 0) * 12px)`;
+                const litColor = `hsl(45 100% 70%)`;
                 return (
                   <span
                     key={c}
@@ -151,9 +154,11 @@ function BuildingShape({ building, unit, index, onClick }: ShapeProps) {
                       width: Math.max(2, unit * 0.18),
                       height: Math.max(2, unit * 0.18),
                       background: lit
-                        ? `linear-gradient(180deg, ${accent.replace(')', ' / 0.9)')}, ${accent.replace(')', ' / 0.55)')})`
+                        ? `linear-gradient(180deg, ${litColor}, ${accent.replace(')', ' / 0.6)')})`
                         : 'hsl(var(--muted) / 0.5)',
-                      boxShadow: lit ? `0 0 4px ${accent.replace(')', ' / 0.6)')}` : 'none',
+                      boxShadow: lit
+                        ? `0 0 ${glowBoost} ${litColor}, 0 0 4px ${accent.replace(')', ' / 0.6)')}`
+                        : 'none',
                     }}
                   />
                 );
