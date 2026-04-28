@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.spotify-auth-url]
 verify_jwt = false
+
+[functions.mood-suggestions]
+verify_jwt = false
