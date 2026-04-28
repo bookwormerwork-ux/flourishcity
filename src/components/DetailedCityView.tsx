@@ -227,18 +227,12 @@ export function DetailedCityView({
 
   return (
     <div className="absolute inset-0 z-[100] animate-fade-in overflow-hidden">
-      {/* Full sky background - SOLID, no blur */}
-      <div className={cn(
-        "absolute inset-0",
-        weather === 'sunny' && "bg-gradient-to-b from-[#87CEEB] via-[#B0E0E6] to-[#87CEEB]",
-        weather === 'partly-cloudy' && "bg-gradient-to-b from-[#87CEEB] via-[#D3D3D3] to-[#87CEEB]",
-        weather === 'cloudy' && "bg-gradient-to-b from-[#778899] via-[#B0C4DE] to-[#778899]",
-        weather === 'rainy' && "bg-gradient-to-b from-[#4A5568] via-[#718096] to-[#4A5568]"
-      )} />
+      {/* Sky now follows real time of day */}
+      <SkyLayer />
 
-      {/* Sun */}
-      {weather === 'sunny' && (
-        <div className="absolute top-16 right-12 w-20 h-20 rounded-full bg-gradient-to-br from-yellow-300 to-orange-400 animate-pulse-soft shadow-[0_0_60px_30px_rgba(255,200,0,0.3)]" />
+      {/* Subtle weather overlay (fog/haze) for low happiness */}
+      {(weather === 'cloudy' || weather === 'rainy') && (
+        <div className="absolute inset-0 bg-foreground/10 pointer-events-none" />
       )}
 
       {/* Animated clouds */}
