@@ -69,6 +69,32 @@ const Index = () => {
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
   const { frame, frameId, setFrameId, frames } = useDeviceFrame();
 
+  // Detect a brand-new building added to the city → cinematic + haptic
+  const lastBuildingCountRef = useRef(cityStats.buildings.length);
+  useEffect(() => {
+    const prev = lastBuildingCountRef.current;
+    const curr = cityStats.buildings.length;
+    if (curr > prev) {
+      const added = cityStats.buildings.slice(prev);
+      const newCompleted = [...added].reverse().find(
+        (b) => !b.state || b.state === 'completed',
+      );
+      if (newCompleted) {
+        setCinematicBuilding(newCompleted);
+        haptic('success');
+      }
+    }
+    lastBuildingCountRef.current = curr;
+  }, [cityStats.buildings]);
+
+  // Mood check-in: once per day, after a short delay
+  useEffect(() => {
+    const today = new Date().toDateString();
+    if (moodLastShown === today) return;
+    const t = setTimeout(() => setShowMood(true), 1500);
+    return () => clearTimeout(t);
+  }, [moodLastShown]);
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [autoFit, setAutoFit] = useState(false);
