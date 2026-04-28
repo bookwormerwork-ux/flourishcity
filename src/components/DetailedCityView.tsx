@@ -84,6 +84,7 @@ export function DetailedCityView({
   const [showPeopleStats, setShowPeopleStats] = useState(false);
   const floatingInterval = useRef<NodeJS.Timeout | null>(null);
   const cloudAnimationRef = useRef<number | null>(null);
+  const sky = useSkyState();
 
   // Generate clouds
   useEffect(() => {
