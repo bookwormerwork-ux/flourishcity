@@ -2,24 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { CityStats, Task, CATEGORY_ICONS } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { GlassyBuildings } from './GlassyBuildings';
+import { SkyLayer } from './SkyLayer';
+import { PinchZoom } from './PinchZoom';
+import { useSkyState } from '@/hooks/useSkyState';
 import {
   X,
   Lock,
-  User,
   Smile,
   Frown,
   Meh,
-  Heart,
-  Star,
-  Sparkles,
   Users,
   TrendingUp,
   Flame,
   Building2,
-  Trophy,
-  Target,
-  Zap,
-  Crown
 } from 'lucide-react';
 
 interface DetailedCityViewProps {
