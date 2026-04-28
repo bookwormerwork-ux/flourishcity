@@ -17,9 +17,14 @@ import { LeaderboardTab } from '@/components/views/LeaderboardTab';
 import { SettingsTab } from '@/components/views/SettingsTab';
 import { VerifyTaskModal } from '@/components/VerifyTaskModal';
 import { CouncilReportModal } from '@/components/CouncilReportModal';
-import { TaskCategory, TaskPriority, TaskDifficulty, Task } from '@/types/game';
+import { BuildingCinematic } from '@/components/BuildingCinematic';
+import { CityPostcardModal } from '@/components/CityPostcardModal';
+import { MoodCheckIn } from '@/components/MoodCheckIn';
+import { TaskCategory, TaskPriority, TaskDifficulty, Task, Building } from '@/types/game';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { haptic } from '@/lib/haptics';
 
 type TabId = 'city' | 'tasks' | 'add' | 'schedule' | 'achievements' | 'leaderboard' | 'settings';
 type WeatherType = 'sunny' | 'partly-cloudy' | 'cloudy' | 'rainy';
