@@ -102,7 +102,10 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
       <div className="fixed inset-0 overlay-blur-strong z-40 animate-fade-in" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
         <div className="max-w-md mx-auto">
-          <div className="glass-ultra rounded-t-[2rem] p-6 pb-8 max-h-[85dvh] overflow-y-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div
+            className="glass-ultra rounded-t-[2rem] p-6 pb-36 max-h-[85dvh] overflow-y-auto scrollbar-hide"
+            style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+          >
             <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
 
             <div className="flex items-center justify-between mb-5">

@@ -220,7 +220,7 @@ export function LeaderboardTab({ cityStats, isPremium, onUpgradeClick }: Leaderb
       {activeSection === 'leaderboard' && (
         <div className="space-y-2 animate-fade-in">
           {/* Global / Friends scope */}
-          <div className="glass rounded-xl p-1 flex mb-2">
+          <div className="glass rounded-xl p-1 flex mb-2 relative z-0">
             {(['global', 'friends'] as const).map((s) => (
               <button
                 key={s}
@@ -240,7 +240,7 @@ export function LeaderboardTab({ cityStats, isPremium, onUpgradeClick }: Leaderb
             </p>
           )}
           {/* Top 3 podium */}
-          <div className="flex items-end justify-center gap-2 mb-4 h-28">
+          <div className="flex items-end justify-center gap-2 mb-4 h-28 relative z-10">
             {/* Second place */}
             <div className="flex flex-col items-center">
               <span className="text-2xl mb-1">{leaderboard[1]?.avatar}</span>

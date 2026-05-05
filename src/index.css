@@ -164,11 +164,20 @@
     @apply border-border;
   }
 
+  /* Match device edges (notch, home bar, rounded corners) to app background */
+  html {
+    background-color: hsl(var(--background));
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: 'ss01' on, 'ss02' on;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+    /* Prevent iOS tap highlight flash */
+    -webkit-tap-highlight-color: transparent;
   }
   
   /* iOS-style selection */
