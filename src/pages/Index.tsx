@@ -1,10 +1,10 @@
-import { useState, useCallback, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { usePremium } from '@/hooks/usePremium';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useTheme } from '@/hooks/useTheme';
 import { useSchedule } from '@/hooks/useSchedule';
-import { useDeviceFrame } from '@/hooks/useDeviceFrame';
+
 import { BottomNav } from '@/components/BottomNav';
 import { AddTaskSheet } from '@/components/AddTaskSheet';
 import { SubscriptionSheet } from '@/components/SubscriptionSheet';
@@ -67,7 +67,7 @@ const Index = () => {
   const { achievements, unlockedCount, totalCount, checkAchievements } = useAchievements(cityStats, tasks);
   const { theme, setTheme } = useTheme();
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
-  const { frame, frameId, setFrameId, frames } = useDeviceFrame();
+  
 
   // Detect a brand-new building added to the city → cinematic + haptic
   const lastBuildingCountRef = useRef(cityStats.buildings.length);
@@ -95,28 +95,6 @@ const Index = () => {
     return () => clearTimeout(t);
   }, [moodLastShown]);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [autoFit, setAutoFit] = useState(false);
-
-  useLayoutEffect(() => {
-    if (frame.id === 'fit') {
-      setAutoFit(true);
-      setScale(1);
-      return;
-    }
-    setAutoFit(false);
-    const compute = () => {
-      const padding = 32;
-      const availW = window.innerWidth - padding;
-      const availH = window.innerHeight - padding;
-      const s = Math.min(1, availW / frame.width, availH / frame.height);
-      setScale(s);
-    };
-    compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, [frame.id, frame.width, frame.height]);
 
   useEffect(() => {
     checkAchievements();
@@ -311,9 +289,6 @@ const Index = () => {
             onUpgradeClick={() => setShowSubscription(true)}
             onActivateDeveloper={activateDeveloperMode}
             onDeactivateDeveloper={deactivateDeveloperMode}
-            frameId={frameId}
-            onFrameChange={setFrameId}
-            frames={frames}
           />
         );
       default:
@@ -321,21 +296,16 @@ const Index = () => {
     }
   };
 
-  const phoneContent = (
-    <>
-      <div className="h-12 flex items-center justify-center shrink-0">
-        <div className="w-28 h-7 bg-foreground/10 rounded-full" />
-      </div>
-
+  return (
+    <div className="h-[100dvh] w-full bg-background flex flex-col overflow-hidden">
       {cityStats.happiness < 30 && cityStats.happiness > 0 && (
-        <div className="px-5">
+        <div className="px-5 pt-3 shrink-0">
           <div className="glass-strong rounded-2xl px-4 py-2 text-sm text-destructive border border-destructive/30 text-center">
             ⚠️ Your citizens are struggling. They need you.
           </div>
         </div>
       )}
-
-      <main className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-hide relative">
+      <main className="flex-1 min-h-0 overflow-y-auto px-5 pt-3 pb-32 scrollbar-hide relative">
         {renderActiveTab()}
 
         {showDetailedCity && (
@@ -351,12 +321,14 @@ const Index = () => {
         )}
       </main>
 
-      <div className="shrink-0 relative z-[200]">
-        <BottomNav
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onAddClick={() => setShowAddSheet(true)}
-        />
+      <div className="fixed bottom-0 inset-x-0 z-[200] pointer-events-none">
+        <div className="max-w-md mx-auto pointer-events-auto">
+          <BottomNav
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onAddClick={() => setShowAddSheet(true)}
+          />
+        </div>
       </div>
 
       {activeReminders.map((reminder) => (
@@ -449,34 +421,6 @@ const Index = () => {
           }}
         />
       )}
-    </>
-  );
-
-  if (autoFit) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col overflow-hidden">
-        {phoneContent}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      ref={wrapperRef}
-      className="min-h-screen bg-gradient-to-b from-background via-background to-accent/20 flex items-center justify-center p-4 overflow-hidden"
-    >
-      <div
-        style={{
-          width: frame.width,
-          height: frame.height,
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          borderRadius: frame.radius,
-        }}
-        className="bg-background shadow-2xl overflow-hidden flex flex-col relative border border-border/30 transition-all duration-300"
-      >
-        {phoneContent}
-      </div>
     </div>
   );
 };

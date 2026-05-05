@@ -235,7 +235,6 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
                   ref={fileRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   className="hidden"
                   onChange={(e) => handleFile(e.target.files?.[0])}
                 />
