@@ -287,7 +287,7 @@ export function SettingsTab({
                     placeholder="Password"
                     className={cn(
                       "w-full p-3 rounded-xl bg-accent/30 border-2 text-foreground placeholder:text-muted-foreground outline-none transition-all duration-300",
-                      devError ? "border-destructive shake" : "border-transparent focus:border-primary"
+                      devError ? "border-destructive animate-wiggle" : "border-transparent focus:border-primary"
                     )}
                     onKeyDown={(e) => e.key === 'Enter' && handleDevSubmit()}
                   />

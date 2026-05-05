@@ -75,10 +75,6 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    if (!beforePhoto) {
-      toast({ title: 'Before photo required', description: 'The council needs proof of your starting point.' });
-      return;
-    }
     onAdd(
       title.trim(),
       category,
@@ -106,7 +102,7 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
       <div className="fixed inset-0 overlay-blur-strong z-40 animate-fade-in" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
         <div className="max-w-md mx-auto">
-          <div className="glass-ultra rounded-t-[2rem] p-6 pb-8 max-h-[90vh] overflow-y-auto scrollbar-hide">
+          <div className="glass-ultra rounded-t-[2rem] p-6 pb-8 max-h-[85dvh] overflow-y-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
 
             <div className="flex items-center justify-between mb-5">
@@ -127,7 +123,6 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="What needs to be done?"
                 className="w-full glass-subtle border border-border/50 rounded-2xl px-4 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-lg"
-                autoFocus
               />
 
               {/* Category */}
@@ -152,7 +147,7 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
                   const cd = isCategoryOnCooldown(category);
                   if (!cd.onCooldown) return null;
                   return (
-                    <p className="text-micro mt-2 text-warning flex items-center gap-1">
+                    <p className="text-micro mt-2 text-amber-600 flex items-center gap-1">
                       <Lock className="w-3 h-3" /> Cooldown: {fmtCooldown(cd.remainingMs)} — task can run, but no city reward.
                     </p>
                   );
@@ -225,9 +220,9 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
               {/* Before photo */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-caption">Before Photo</p>
+                  <p className="text-caption">Before Photo <span className="text-micro text-muted-foreground">(optional)</span></p>
                   <span className="text-micro flex items-center gap-1 text-muted-foreground">
-                    <Lock className="w-3 h-3" /> Photos are never stored.
+                    <Lock className="w-3 h-3" /> Never stored.
                   </span>
                 </div>
 
@@ -275,10 +270,10 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
 
               <button
                 type="submit"
-                disabled={!title.trim() || !beforePhoto}
+                disabled={!title.trim()}
                 className={cn(
-                  'w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all ios-press',
-                  title.trim() && beforePhoto
+                  'w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all ios-press mb-6',
+                  title.trim()
                     ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-button'
                     : 'bg-muted/30 text-muted-foreground cursor-not-allowed',
                 )}

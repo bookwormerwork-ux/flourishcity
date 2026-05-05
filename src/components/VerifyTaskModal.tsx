@@ -78,7 +78,7 @@ export function VerifyTaskModal({ task, beforePhoto, onClose, onVerified }: Veri
     <>
       <div className="fixed inset-0 overlay-blur-strong z-[100] animate-fade-in" onClick={onClose} />
       <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[110] max-w-md mx-auto animate-scale-in">
-        <div className="glass-ultra rounded-[1.75rem] p-6 max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <div className="glass-ultra rounded-[1.75rem] p-6 max-h-[85dvh] overflow-y-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-headline text-foreground">Prove Your Work</h2>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-accent/50 ios-press">
@@ -191,12 +191,6 @@ export function VerifyTaskModal({ task, beforePhoto, onClose, onVerified }: Veri
             </button>
           )}
 
-          <style>{`
-            @keyframes stack {
-              0%, 100% { height: 20%; }
-              50% { height: 100%; }
-            }
-          `}</style>
         </div>
       </div>
     </>

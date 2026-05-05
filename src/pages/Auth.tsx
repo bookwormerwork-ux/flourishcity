@@ -22,13 +22,18 @@ export default function Auth() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } =
-      mode === 'signin'
-        ? await signInWithEmail(email, password)
-        : await signUpWithEmail(email, password, displayName || email.split('@')[0]);
-    setLoading(false);
-    if (error) setError(error.message);
-    else if (mode === 'signup') setError('Check your email to confirm your account (or sign in if confirmation is disabled).');
+    try {
+      const { error } =
+        mode === 'signin'
+          ? await signInWithEmail(email, password)
+          : await signUpWithEmail(email, password, displayName || email.split('@')[0]);
+      if (error) setError(error.message);
+      else if (mode === 'signup') setError('Check your email to confirm your account (or sign in if confirmation is disabled).');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

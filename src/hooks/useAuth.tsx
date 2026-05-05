@@ -55,9 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: `${window.location.origin}/`,
-    });
+    try {
+      await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: `${window.location.origin}/`,
+      });
+    } catch {
+      // OAuth redirect failures are non-fatal on native — user can still sign in with email
+    }
   };
 
   const signOut = async () => {
