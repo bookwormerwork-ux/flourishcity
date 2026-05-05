@@ -219,6 +219,26 @@ export function LeaderboardTab({ cityStats, isPremium, onUpgradeClick }: Leaderb
       {/* Leaderboard */}
       {activeSection === 'leaderboard' && (
         <div className="space-y-2 animate-fade-in">
+          {/* Global / Friends scope */}
+          <div className="glass rounded-xl p-1 flex mb-2">
+            {(['global', 'friends'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setScope(s)}
+                className={cn(
+                  'flex-1 py-2 rounded-lg text-xs font-semibold capitalize transition-all',
+                  scope === s ? 'bg-primary text-primary-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          {scope === 'friends' && leaderboard.length <= 1 && (
+            <p className="text-caption text-center py-3">
+              Add friends in Settings to compete privately.
+            </p>
+          )}
           {/* Top 3 podium */}
           <div className="flex items-end justify-center gap-2 mb-4 h-28">
             {/* Second place */}
