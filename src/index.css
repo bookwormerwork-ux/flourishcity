@@ -164,20 +164,39 @@
     @apply border-border;
   }
 
-  /* Match device edges (notch, home bar, rounded corners) to app background */
+  /* ----------------------------------------------------------------
+   * LOCK to the viewport — prevents the WKScrollView from treating
+   * the entire page as a scrollable document (the "interactive PDF"
+   * problem on iOS Capacitor). Internal overflow-y-auto containers
+   * still scroll normally; only the root document scroll is removed.
+   * ---------------------------------------------------------------- */
   html {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
     background-color: hsl(var(--background));
-    height: 100%;
+    /* Dark-mode edge colour handled via prefers-color-scheme */
   }
 
   body {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: 'ss01' on, 'ss02' on;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    height: 100%;
-    /* Prevent iOS tap highlight flash */
     -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   
   /* iOS-style selection */

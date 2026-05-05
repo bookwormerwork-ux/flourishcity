@@ -37,7 +37,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-accent/30 flex items-center justify-center p-6">
+    <div className="h-full w-full bg-gradient-to-b from-background to-accent/30 flex items-center justify-center p-6 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
       <GlassPanel variant="strong" className="w-full max-w-sm p-6 space-y-5">
         <div className="text-center space-y-1">
           <div className="inline-flex items-center gap-2 text-primary">
