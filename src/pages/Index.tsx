@@ -1,10 +1,10 @@
-import { useState, useCallback, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { usePremium } from '@/hooks/usePremium';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useTheme } from '@/hooks/useTheme';
 import { useSchedule } from '@/hooks/useSchedule';
-import { useDeviceFrame } from '@/hooks/useDeviceFrame';
+
 import { BottomNav } from '@/components/BottomNav';
 import { AddTaskSheet } from '@/components/AddTaskSheet';
 import { SubscriptionSheet } from '@/components/SubscriptionSheet';
@@ -67,7 +67,7 @@ const Index = () => {
   const { achievements, unlockedCount, totalCount, checkAchievements } = useAchievements(cityStats, tasks);
   const { theme, setTheme } = useTheme();
   const { scheduleByHour, activeReminders, scheduleTask, dismissReminder } = useSchedule(tasks);
-  const { frame, frameId, setFrameId, frames } = useDeviceFrame();
+  
 
   // Detect a brand-new building added to the city → cinematic + haptic
   const lastBuildingCountRef = useRef(cityStats.buildings.length);
@@ -95,28 +95,6 @@ const Index = () => {
     return () => clearTimeout(t);
   }, [moodLastShown]);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [autoFit, setAutoFit] = useState(false);
-
-  useLayoutEffect(() => {
-    if (frame.id === 'fit') {
-      setAutoFit(true);
-      setScale(1);
-      return;
-    }
-    setAutoFit(false);
-    const compute = () => {
-      const padding = 32;
-      const availW = window.innerWidth - padding;
-      const availH = window.innerHeight - padding;
-      const s = Math.min(1, availW / frame.width, availH / frame.height);
-      setScale(s);
-    };
-    compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, [frame.id, frame.width, frame.height]);
 
   useEffect(() => {
     checkAchievements();
