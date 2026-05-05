@@ -297,7 +297,7 @@ const Index = () => {
   };
 
   return (
-    <div className="h-full w-full bg-background flex flex-col overflow-hidden">
+    <div className="h-full w-full bg-background flex flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 44px)' }}>
       {cityStats.happiness < 30 && cityStats.happiness > 0 && (
         <div className="px-5 pt-3 shrink-0">
           <div className="glass-strong rounded-2xl px-4 py-2 text-sm text-destructive border border-destructive/30 text-center">
