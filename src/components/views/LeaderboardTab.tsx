@@ -60,17 +60,32 @@ const MOCK_LEADERBOARD: LeaderboardPlayer[] = [
 
 export function LeaderboardTab({ cityStats, isPremium, onUpgradeClick }: LeaderboardTabProps) {
   const [activeSection, setActiveSection] = useState<'leaderboard' | 'challenges'>('leaderboard');
+  const [scope, setScope] = useState<'global' | 'friends'>('global');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { rows: onlineRows } = useLeaderboard();
+  const { friends } = useFriends();
 
   const yourXP = cityStats.totalTasksCompleted * 10;
 
-  // Sync my score to backend when signed in
   useSyncMyScore(yourXP, cityStats.streak, cityStats.totalTasksCompleted);
 
   const leaderboard = useMemo<LeaderboardPlayer[]>(() => {
-    // If we have online data, use it
+    if (scope === 'friends') {
+      const accepted = friends.filter((f) => f.status === 'accepted');
+      const list: LeaderboardPlayer[] = accepted.map((f, i) => ({
+        id: i + 1,
+        name: f.display_name,
+        xp: f.xp,
+        streak: f.streak,
+        rank: i + 1,
+        avatar: f.avatar,
+      }));
+      if (user) {
+        list.push({ id: 9999, name: 'You', xp: yourXP, streak: cityStats.streak, rank: 0, avatar: '⭐', isYou: true });
+      }
+      return list.sort((a, b) => b.xp - a.xp).map((p, i) => ({ ...p, rank: i + 1 }));
+    }
     if (onlineRows.length > 0) {
       const mapped = onlineRows.map((r, i) => ({
         id: i + 1,
@@ -81,17 +96,15 @@ export function LeaderboardTab({ cityStats, isPremium, onUpgradeClick }: Leaderb
         avatar: r.avatar,
         isYou: user?.id === r.user_id,
       }));
-      // Ensure "You" appears even if not synced yet
       if (user && !mapped.some(m => m.isYou)) {
         mapped.push({ id: 9999, name: 'You', xp: yourXP, streak: cityStats.streak, rank: mapped.length + 1, avatar: '⭐', isYou: true });
       }
       return mapped.sort((a, b) => b.xp - a.xp).map((p, i) => ({ ...p, rank: i + 1 }));
     }
-    // Fallback mock when not signed in / no data
     return MOCK_LEADERBOARD.map(p =>
       p.isYou ? { ...p, xp: yourXP, streak: cityStats.streak } : p
     ).sort((a, b) => b.xp - a.xp).map((p, i) => ({ ...p, rank: i + 1 }));
-  }, [yourXP, cityStats.streak, onlineRows, user]);
+  }, [scope, friends, yourXP, cityStats.streak, onlineRows, user]);
 
   const yourRank = leaderboard.find(p => p.isYou)?.rank ?? leaderboard.length + 1;
 
