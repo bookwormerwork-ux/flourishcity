@@ -5,6 +5,7 @@ import { CityStats } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useLeaderboard, useSyncMyScore } from '@/hooks/useLeaderboard';
+import { useFriends } from '@/hooks/useFriends';
 import { 
   Trophy, 
   Crown, 
