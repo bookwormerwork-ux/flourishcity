@@ -1,6 +1,6 @@
 import { GlassPanel } from '@/components/GlassPanel';
 import { CityStats } from '@/types/game';
-import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, LogIn, LogOut, UserIcon } from 'lucide-react';
+import { Trash2, Download, Sparkles, Heart, Moon, Sun, Monitor, Crown, ChevronRight, Code, X, Check, LogIn, LogOut, UserIcon, Zap, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
