@@ -163,11 +163,25 @@ export function AddTaskSheet({ isOpen, onClose, onAdd, isCategoryOnCooldown }: A
                   <p className="text-caption">Estimated duration</p>
                   <span className="text-sm font-semibold text-foreground">{duration} min</span>
                 </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setDuration(1)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-xl text-xs font-semibold border-2 ios-press transition-all',
+                      duration === 1
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-transparent glass-subtle text-muted-foreground',
+                    )}
+                  >
+                    1 min
+                  </button>
+                </div>
                 <Slider
                   min={5}
                   max={480}
                   step={5}
-                  value={[duration]}
+                  value={[duration === 1 ? 5 : duration]}
                   onValueChange={(v) => setDuration(v[0])}
                 />
               </div>
