@@ -375,3 +375,11 @@
     @apply pill bg-transparent text-foreground hover:bg-accent;
   }
 }
+
+/* Hide Lovable's hosted "Edit with Lovable" badge injected by lovableproject.com */
+[id*="lovable"]:not([id="root"]),
+[class*="lovable-badge"],
+iframe[src*="lovable.dev"],
+iframe[src*="lovableproject.com"] {
+  display: none !important;
+}
