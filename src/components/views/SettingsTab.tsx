@@ -23,6 +23,8 @@ interface SettingsTabProps {
   frameId?: DeviceFrameId;
   onFrameChange?: (id: DeviceFrameId) => void;
   frames?: DeviceFrame[];
+  onUnlockEverything?: () => void;
+  onResetCity?: () => void;
 }
 
 export function SettingsTab({
