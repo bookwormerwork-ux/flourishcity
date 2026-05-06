@@ -526,5 +526,7 @@ export function useGameState() {
     dismissCitizenDemand,
     addCouncilReport,
     acknowledgeCrisis,
+    unlockEverythingSandbox,
+    resetCity,
   };
 }
