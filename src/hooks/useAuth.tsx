@@ -1,7 +1,19 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable';
+import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
+
+// Custom URL scheme registered in Info.plist for deep-link OAuth callback on iOS.
+const APP_URL_SCHEME = 'app.lovable.b2585817a19049cf9b5a6ea76d62b529';
+const OAUTH_CALLBACK_PATH = 'login-callback';
+const NATIVE_REDIRECT = `${APP_URL_SCHEME}://${OAUTH_CALLBACK_PATH}`;
+
+// Deployed web URL — used as emailRedirectTo on native (capacitor://localhost is not a valid email link target).
+const WEB_APP_URL = 'https://b2585817-a190-49cf-9b5a-6ea76d62b529.lovableproject.com';
+
+const isNative =
+  typeof window !== 'undefined' && window.location.protocol === 'capacitor:';
 
 interface AuthContextValue {
   user: User | null;
@@ -21,13 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
     });
 
-    // THEN load current session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
@@ -37,17 +47,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Handle OAuth deep-link callback on native (e.g. after Google sign-in).
+  useEffect(() => {
+    if (!isNative) return;
+    let cleanup: (() => void) | undefined;
+    App.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.includes(OAUTH_CALLBACK_PATH)) return;
+      try {
+        const parsed = new URL(url);
+        const code = parsed.searchParams.get('code');
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code);
+        }
+      } catch {
+        // ignore malformed URLs
+      } finally {
+        await Browser.close();
+      }
+    }).then((handle) => {
+      cleanup = () => handle.remove();
+    });
+    return () => cleanup?.();
+  }, []);
+
   const signInWithEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+    const redirectTo = isNative ? `${WEB_APP_URL}/` : `${window.location.origin}/`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: redirectTo,
         data: { display_name: displayName },
       },
     });
@@ -56,11 +90,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: `${window.location.origin}/`,
-      });
+      if (isNative) {
+        // PKCE flow: open system browser, redirect back via URL scheme.
+        // Requires NATIVE_REDIRECT to be in Supabase → Auth → URL Configuration → Redirect URLs.
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: NATIVE_REDIRECT,
+            skipBrowserRedirect: true,
+            queryParams: { access_type: 'offline', prompt: 'consent' },
+          },
+        });
+        if (error || !data.url) return;
+        await Browser.open({ url: data.url, windowName: '_self' });
+      } else {
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: `${window.location.origin}/` },
+        });
+      }
     } catch {
-      // OAuth redirect failures are non-fatal on native — user can still sign in with email
+      // non-fatal
     }
   };
 

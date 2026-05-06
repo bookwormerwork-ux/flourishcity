@@ -17,11 +17,16 @@ export function SubscriptionSheet({ isOpen, onClose, onSubscribe, currentPlan }:
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    onSubscribe(selectedPlan);
+    // TODO: integrate RevenueCat (@revenuecat/purchases-capacitor) or Stripe for real IAP.
+    // Apple IAP requires App Store Connect products + entitlements + native SDK.
+    // For now show a clear message rather than silently fake-granting premium.
+    await new Promise(resolve => setTimeout(resolve, 400));
     setIsProcessing(false);
-    onClose();
+    alert(
+      'Apple Pay / in-app purchase is not yet connected.\n\n' +
+      'To enable real billing, the app needs App Store Connect products and RevenueCat configured. ' +
+      'Contact the developer to set this up.',
+    );
   };
 
   const features = [

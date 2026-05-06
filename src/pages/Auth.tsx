@@ -4,10 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { GlassPanel } from '@/components/GlassPanel';
 import { Sparkles } from 'lucide-react';
 
-// Capacitor native apps use capacitor://localhost as origin — Google OAuth
-// redirects back to that URL which is unresolvable (404). Hide the Google
-// button on native; it only works on the deployed web version.
-const isNative = typeof window !== 'undefined' && window.location.protocol === 'capacitor:';
 
 export default function Auth() {
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
@@ -55,18 +51,12 @@ export default function Auth() {
           <p className="text-caption">{mode === 'signin' ? 'Welcome back' : 'Create your account'}</p>
         </div>
 
-        {isNative ? (
-          <p className="text-xs text-center text-muted-foreground py-1">
-            Sign in with email below. Google sign-in is available on the web version.
-          </p>
-        ) : (
-          <button
-            onClick={signInWithGoogle}
-            className="w-full py-3 rounded-xl bg-foreground text-background font-semibold text-sm ios-press"
-          >
-            Continue with Google
-          </button>
-        )}
+        <button
+          onClick={signInWithGoogle}
+          className="w-full py-3 rounded-xl bg-foreground text-background font-semibold text-sm ios-press"
+        >
+          Continue with Google
+        </button>
 
         <div className="flex items-center gap-3 text-caption">
           <div className="flex-1 h-px bg-border" /> or <div className="flex-1 h-px bg-border" />
