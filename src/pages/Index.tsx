@@ -291,6 +291,8 @@ const Index = () => {
             onUpgradeClick={() => setShowSubscription(true)}
             onActivateDeveloper={activateDeveloperMode}
             onDeactivateDeveloper={deactivateDeveloperMode}
+            onUnlockEverything={unlockEverythingSandbox}
+            onResetCity={resetCity}
           />
         );
       default:
