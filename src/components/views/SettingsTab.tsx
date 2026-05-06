@@ -271,14 +271,45 @@ export function SettingsTab({
                     <Check className="w-8 h-8 text-success" />
                   </div>
                   <p className="text-body text-foreground mb-4">Developer mode is active</p>
-                  <button 
+
+                  {/* Sandbox controls */}
+                  <div className="space-y-2 mb-4">
+                    <button
+                      onClick={() => {
+                        onUnlockEverything?.();
+                        setShowDevPanel(false);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl px-4 py-3 bg-primary text-primary-foreground font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Unlock Everything (Sandbox)
+                    </button>
+                    <p className="text-micro text-left">
+                      Spawns every building type, maxes happiness & streak, and fast-forwards population.
+                    </p>
+
+                    <button
+                      onClick={() => {
+                        if (confirm('Reset city to a fresh state? This wipes tasks and buildings.')) {
+                          onResetCity?.();
+                          setShowDevPanel(false);
+                        }
+                      }}
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl px-4 py-3 bg-accent text-accent-foreground font-semibold transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Reset City to Default
+                    </button>
+                  </div>
+
+                  <button
                     onClick={() => {
                       onDeactivateDeveloper();
                       setShowDevPanel(false);
                     }}
                     className="pill-secondary w-full transition-all duration-300"
                   >
-                    Deactivate
+                    Deactivate Developer Mode
                   </button>
                 </div>
               ) : (
