@@ -452,6 +452,42 @@ export function useGameState() {
     }));
   }, [setCityStats]);
 
+  /* --------------------------------------------------------------
+   * SANDBOX: unlock everything (dev mode)
+   * -------------------------------------------------------------- */
+  const unlockEverythingSandbox = useCallback(() => {
+    const allTypes: BuildingType[] = [
+      'house','apartment','shop','cafe','office','school','library','gym','park',
+      'hospital','tower','town_hall','police','fire','factory','statue','studio',
+      'temple','meditation','bank','cathedral','stadium','grand_library',
+    ];
+    const cats: TaskCategory[] = ['work','study','health','home','creative','growth','social','finance'];
+    const buildings: Building[] = [];
+    // 3 of every type for a full skyline
+    for (let i = 0; i < 3; i++) {
+      allTypes.forEach((t, idx) => {
+        buildings.push(makeBuilding(t, cats[(idx + i) % cats.length], 'completed'));
+      });
+    }
+    setCityStats((s) => ({
+      ...s,
+      population: Math.max(s.population, 25000),
+      happiness: 100,
+      streak: Math.max(s.streak, 30),
+      totalTasksCompleted: Math.max(s.totalTasksCompleted, 250),
+      buildings: [...s.buildings.filter((b) => b.state === 'completed'), ...buildings],
+      lastActivityDate: new Date().toISOString(),
+      lastCompletionAt: new Date().toISOString(),
+      cooldowns: {},
+      decayShownCrisis: true,
+    }));
+  }, [setCityStats]);
+
+  const resetCity = useCallback(() => {
+    setCityStats(DEFAULT_CITY_STATS);
+    setTasks([]);
+  }, [setCityStats, setTasks]);
+
   /* -------------------------------------------------------------- */
   const activeTasks = useMemo(() => tasks.filter((t) => !t.completed && !t.isDebt), [tasks]);
   const debtTasks = useMemo(() => tasks.filter((t) => t.isDebt && !t.completed), [tasks]);
@@ -490,5 +526,7 @@ export function useGameState() {
     dismissCitizenDemand,
     addCouncilReport,
     acknowledgeCrisis,
+    unlockEverythingSandbox,
+    resetCity,
   };
 }

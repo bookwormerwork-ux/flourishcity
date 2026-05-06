@@ -62,6 +62,8 @@ const Index = () => {
     dismissCitizenDemand,
     addCouncilReport,
     acknowledgeCrisis,
+    unlockEverythingSandbox,
+    resetCity,
   } = useGameState();
   const { isPremium, plan, isDeveloper, subscribe, activateDeveloperMode, deactivateDeveloperMode } = usePremium();
   const { achievements, unlockedCount, totalCount, checkAchievements } = useAchievements(cityStats, tasks);
@@ -289,6 +291,8 @@ const Index = () => {
             onUpgradeClick={() => setShowSubscription(true)}
             onActivateDeveloper={activateDeveloperMode}
             onDeactivateDeveloper={deactivateDeveloperMode}
+            onUnlockEverything={unlockEverythingSandbox}
+            onResetCity={resetCity}
           />
         );
       default:
