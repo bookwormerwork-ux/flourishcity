@@ -8,14 +8,14 @@ const corsHeaders = {
 };
 
 interface VerifyBody {
-  beforeImage: string; // data URL
-  afterImage: string;  // data URL
+  beforeImage: string | null; // optional — null if no before photo was taken
+  afterImage: string;
   taskName: string;
   category: string;
   estimatedDurationMinutes: number;
 }
 
-const SYSTEM_PROMPT = `You are a strict but fair task completion verifier for a productivity app. You will be shown a before photo and an after photo, along with a task description. Your job is to determine if meaningful, real work was done consistent with the task described. Be skeptical of trivial changes. Look for genuine environmental or documentary evidence of effort.
+const SYSTEM_PROMPT_BEFORE_AFTER = `You are a strict but fair task completion verifier for a productivity app. You will be shown a before photo and an after photo, along with a task description. Your job is to determine if meaningful, real work was done consistent with the task described. Be skeptical of trivial changes. Look for genuine environmental or documentary evidence of effort.
 
 Respond ONLY in this exact JSON format:
 
@@ -25,19 +25,31 @@ Respond ONLY in this exact JSON format:
   "message": "A single encouraging or constructive sentence addressed to the user in second person, max 20 words."
 }
 
-If no before or after image is provided or they appear identical, always return verified: false.`;
+If the photos appear identical, always return verified: false.`;
+
+const SYSTEM_PROMPT_AFTER_ONLY = `You are a strict but fair task completion verifier for a productivity app. You will be shown a single photo taken after completing a task. Your job is to determine if the photo provides genuine evidence that the described task was completed. Look for real, tangible signs of completion — finished work, a tidy space, relevant output, etc.
+
+Respond ONLY in this exact JSON format:
+
+{
+  "verified": true or false,
+  "confidence": "high" | "medium" | "low",
+  "message": "A single encouraging or constructive sentence addressed to the user in second person, max 20 words."
+}
+
+If the photo shows no evidence of the task, return verified: false.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const body = (await req.json()) as VerifyBody;
-    if (!body.beforeImage || !body.afterImage) {
+    if (!body.afterImage) {
       return new Response(
         JSON.stringify({
           verified: false,
           confidence: "high",
-          message: "Both before and after photos are required.",
+          message: "An after photo is required to verify your work.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -46,16 +58,22 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const hasBeforePhoto = !!body.beforeImage;
+    const systemPrompt = hasBeforePhoto ? SYSTEM_PROMPT_BEFORE_AFTER : SYSTEM_PROMPT_AFTER_ONLY;
+    const userText = hasBeforePhoto
+      ? `Task: "${body.taskName}"\nCategory: ${body.category}\nEstimated duration: ${body.estimatedDurationMinutes} min\n\nVerify whether the after photo shows meaningful, genuine progress on the task vs. the before photo. Return ONLY the JSON.`
+      : `Task: "${body.taskName}"\nCategory: ${body.category}\nEstimated duration: ${body.estimatedDurationMinutes} min\n\nNo before photo was taken. Verify whether this after photo provides genuine evidence that the task was completed. Return ONLY the JSON.`;
+
+    const imageContent = hasBeforePhoto
+      ? [
+          { type: "image_url", image_url: { url: body.beforeImage! } },
+          { type: "image_url", image_url: { url: body.afterImage } },
+        ]
+      : [{ type: "image_url", image_url: { url: body.afterImage } }];
+
     const userMsg = {
       role: "user",
-      content: [
-        {
-          type: "text",
-          text: `Task: "${body.taskName}"\nCategory: ${body.category}\nEstimated duration: ${body.estimatedDurationMinutes} min\n\nVerify whether the after photo shows meaningful, genuine progress on the task vs. the before photo. Return ONLY the JSON.`,
-        },
-        { type: "image_url", image_url: { url: body.beforeImage } },
-        { type: "image_url", image_url: { url: body.afterImage } },
-      ],
+      content: [{ type: "text", text: userText }, ...imageContent],
     };
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -67,7 +85,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           userMsg,
         ],
       }),

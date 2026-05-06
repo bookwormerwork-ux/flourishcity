@@ -43,7 +43,7 @@ export function VerifyTaskModal({ task, beforePhoto, onClose, onVerified }: Veri
     try {
       const { data, error } = await supabase.functions.invoke('verify-task', {
         body: {
-          beforeImage: beforePhoto || afterPhoto, // fallback if no before stored
+          beforeImage: beforePhoto ?? null,
           afterImage: afterPhoto,
           taskName: task.title,
           category: task.category,
