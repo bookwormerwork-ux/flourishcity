@@ -40,7 +40,9 @@ export function SettingsTab({
   onDeactivateDeveloper,
   frameId,
   onFrameChange,
-  frames
+  frames,
+  onUnlockEverything,
+  onResetCity,
 }: SettingsTabProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showDevPanel, setShowDevPanel] = useState(false);
